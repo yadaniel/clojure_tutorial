@@ -74,6 +74,14 @@
 (import java.util.Date)      ;; without "" returns class
 (println (Date.))
 
+;; import is function
+;; :import is keyword in context of ns
+;; either use 
+;; (ns new-namespace)
+;; (import 'something)
+;; or
+;; (ns new-namespace :import 'something)
+
 (println (keys (ns-publics 'user)))
 (println (keys (ns-interns 'user)))
 (println (keys (ns-imports 'user)))
@@ -119,4 +127,91 @@
 
 ;; thread last
 (->> 1 (+ 2)(* 10))
+
+;; both of type ratio
+(def f1 1/7)
+(def f2 (/ 1 7))
+
+(defn files[dir] (file-seq (clojure.java.io/file dir)))
+(count (files "."))
+
+(use 'clojure.java.io)
+(-> "./" file .listFiles)
+(.listFiles (file "./"))
+
+(take 10 (range 100))
+(drop 10 (range 100))
+(reverse (range 10))
+
+(take-nth 2 (range 100))  ;; every second element
+(take-while #(< % 10) (range 100))
+(drop-while #(< % 10) (range 100))
+
+(slurp "data.txt")
+(slurp "data.txt" :encoding "ascii")
+(slurp "data.txt" :encoding "utf8")
+;; (slurp "data.txt" :encoding "utf9")   ;; exception
+(def txt (slurp "data.txt"))
+
+
+;; :import brings in java classes
+;; :require brings in namespaces, access with qualification
+;; :use brings in namespaces, access without qualification
+;; :requre, :refer => :use
+;;
+;; (:require [foo :as f])
+;; (:require [foo :refer [bar baz]])
+
+(println (.getTime (Date.)))
+(.print System/out "enter: ")
+(.readLine (System/console))
+;; other methods
+(.read System/in)
+(.print System/out "stdout")
+(.print System/err "stderr")
+(.println System/out "stdout")
+(.println System/err "stderr")
+
+;; using regex
+(defn is_number?[n]
+  (let [p (re-pattern "\\d+")] 
+    (if (nil? (re-matches p n))
+      false
+      true)))
+
+(def assign-pattern #"\w+=\d+")
+(println (re-matches assign-pattern "foo=123"))         ;; true
+(println (re-find assign-pattern "foo=123, bar=456"))   ;; foo=123
+(println (re-seq assign-pattern "foo=123, bar=456"))  ;; (foo=123 bar=456)
+
+(java.lang.String/valueOf 1234)
+(java.lang.String/valueOf 1234.5)
+
+(ns main_namespace)   ;; create and switch to new namespace
+(println *ns*)        ;; current namespace
+(def t 2)             ;; bind 2 to t
+(println t)           ;; print 2
+(ns user)             ;; switch back
+(println *ns*)        ;; current namespace
+(def t 1)             ;; bind 1 to t
+(println t)           ;; print 1
+
+(println main_namespace/t)  ;; full reference
+(println user/t)            ;; full reference
+
+;; CLASSPATH="./"  main.clj
+(import 'Foo)             ;; from Foo.java
+(def f1(Foo.))            ;; instance of Foo (syntax 1)
+(def f2(new Foo))         ;; instance of Foo (syntax 2)
+(println (Foo/f_static 1 6))  ;; call static method on Foo
+(println (.f f1 1 6))         ;; call non-static method on instance
+(println (Foo$InnerFoo/data))   ;; access to static variable of inner class
+(import 'Foo$InnerFoo)          ;; from Foo.java
+;; (println (Foo$InnerFoo.))       ;; seems not to work
+
+
+(use 'clojure.reflect)    ;; reflecton
+(use 'clojure.pprint)     ;; pretty print
+(println (reflect *ns*))
+;; (println ((reflect *ns*) :members))
 
