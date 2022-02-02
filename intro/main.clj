@@ -215,3 +215,28 @@
 (println (reflect *ns*))
 ;; (println ((reflect *ns*) :members))
 
+
+;; evaluates to nil
+(cond 
+  (true? false) 1
+  (true? false) 2
+  (true? false) 3)
+
+;; evaluates to 4
+(cond 
+  (true? false) 1
+  (true? false) 2
+  (true? false) 3
+  :else 4)
+
+;; evaluates to 4
+(cond 
+  (true? false) 1
+  (true? false) 2
+  (true? false) 3
+  true 4)
+
+(def n 10N)       ;; clojure.lang.BigInt
+(def m 10M)       ;; clojure.lang.BigDecimal
+
+
