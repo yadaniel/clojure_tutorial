@@ -2,6 +2,19 @@
 
 (ns main)
 
+;; for
+;; (for [i (range 10)] i)
+
+;; dotimes
+;; (dotimes [i 10] (println i))
+
+;; loop
+;; (loop [i 0] (do (println i) (if (< i 10) (recur (inc i)))))
+
+(def q [])
+(dotimes [i 10] (def q (conj q i)))
+(println "q =" q)
+
 (loop [i 100 x 0] (if (zero? i) x (recur (dec i) (+ x i))))
 (println (loop [i 100 x 0] (if (zero? i) x (recur (dec i) (+ x i)))))
 
@@ -67,5 +80,61 @@
 (println z z')
 
 (type #_(map) 1)
+
+(for [i '(map filter reduce)] (type (eval i)))
+(for [i [1 2 3 4] j [10 20 30 40]] (+ i j))
+
+(println "take 10 repeat 1 =>" (take 10 (repeat 1)))
+
+(list)
+(vector)
+(hash-map)
+
+;; only in REPL
+;; (doc map)
+
+(string? "")
+(integer? 1)
+(map? {})
+(list? '())
+(vector? [])
+(seq? '())
+
+(def a 10)
+(ns foo)
+(def a 1)
+(def b 1)
+(def c 1)
+;; (println a)
+(println foo/a)
+(refer 'foo)
+(println a)
+(assert (= a foo/a))
+(assert (= a 1) "a shall be 1")
+(ns main)
+(assert (= a main/a))
+(assert (= a 10) "a shall be 10")
+
+;; (try (/ 1 0) 
+;;      (catch Exception e (do (println "catched") (println (.getMessage e))))
+;;      (finally (println "finally")))
+
+;; Throwable.toString()
+;; Throwable.getMessage()
+;; Throwable.getStackTrace()
+(try (/ 1 0) 
+     (catch ArithmeticException e (do (println "arithmetic exception") (println (.toString e))))
+     (catch Exception e (println "exception")) 
+     (finally (println "finally")))
+
+;; (try (/ 1 0) 
+;;      (catch ArithmeticException e (do (println "arithmetic exception") (println (.getMessage e))))
+;;      (catch Exception e (println "exception")) 
+;;      (finally (println "finally")))
+
+;; (try (/ 1 0) 
+;;      (catch ArithmeticException e (println "arithmetic exception"))
+;;      (catch Exception e (println "exception")) 
+;;      (finally (println "finally")))
 
 
