@@ -33,6 +33,17 @@
 (def d2 (Double. "1.0f"))
 (println "java objects" b1 s1 i1 l1 f1 f2 d1 d2)
 
+;; java objects
+(def b2 (new Byte "1"))
+(def s2 (new Short "1"))
+(def i2 (new Integer "1"))
+(def l2 (new Long "1"))
+(def f3 (new Float "1.0"))
+(def f4 (new Float "1.0f"))
+(def d3 (new Double "1.0"))
+(def d4 (new Double "1.0f"))
+(println "java objects (new)" b2 s2 i2 l2 f3 f4 d3 d4)
+
 (def xs (list
   (BigDecimal. 1234.1234)     ;; => 1M
   (BigDecimal. "1234.1234")   ;; => 1M
@@ -64,6 +75,11 @@
 (println "info of s: " (:info (meta #'s)))
 (println)
 
+;; aquivalent to setting private:true
+(defn- f_private[])
+(println "meta of f_private: " (meta (var f_private)))
+(println)
+
 ;;
 
 (type Math/PI)
@@ -74,6 +90,13 @@
 (hash-map 1 2 3 4)
 (list 1 2 3 4)
 (vector 1 2 3 4)
+(defrecord vec2d[x y])
+
+(def origin1 (vec2d. 0 0)) 
+(def origin2 (new vec2d 0 0))
+(println "type of vec2d =>" (type vec2d))
+(println "type of Byte =>" (type Byte))
+(read-line)
 
 (def inttypes
   [(Byte/MIN_VALUE) (Byte/MAX_VALUE)
@@ -96,6 +119,10 @@
 (.toString (Date.))
 (println "pwd => " (.getCanonicalPath (File. ".")))
 
+;; 
+(println "types => " (map #(type %) (list \A 1 1.0 1N 1M)))
+(println "types => " (map #(class %) (list \A 1 1.0 1N 1M)))
+
 (loop [i 5] (do (print "line " i ",\n")
                  ;; (read-line)
                  (flush)
@@ -111,5 +138,4 @@
 (dotimes [_ 10] (print ">>" 1 2 3 4 "\n"))
 (let [ans (read-line)] (cond (= ans "1") (System/exit 1)  true (System/exit 0) ))
 (System/exit (Integer/parseInt (read-line)))
-
 

@@ -2,14 +2,36 @@
 
 (ns main)
 
+;; list comprehension
 ;; for
 ;; (for [i (range 10)] i)
+;; (for [i (range 10) j (range 10)] (+ i j))
+;; (for [i (range 10) j (range 10) :when true] (+ i j))
+;; (for [i (range 10) j (range 10) :when (= 15 (+ i j))] (list i j))
+;; (for [i (range 10) j (range 10) :let [z (+ i j)] :when (= 15 z)] (list i j))
+;; (for [i (range 10) j (range 10) :let [z (+ i j) p (* i j)] :when (= 15 z)] (list i j p))
+;; general structure
+;; (for [i (range 10) j (range 10) :when true :when true :when true] (+ i j))
+;; (for [i (range 10) j (range 10) :let [] :when true :when true :when true :let []] (+ i j))
 
 ;; dotimes
 ;; (dotimes [i 10] (println i))
 
 ;; loop
 ;; (loop [i 0] (do (println i) (if (< i 10) (recur (inc i)))))
+
+;; ;; let
+;; (let[])
+;; (let[] (let[]))
+;; (let[] (let[](let[])))
+;; (let[i 0] (let[i 1](let[i 2])))
+;; (let[i 0] (let[i 1] (let[i 2] (println "level 2 =>" i)) (println "level 1 =>" i)) (println "level 0 =>" i))
+;; (let[i 0] 
+;;   (let[i 1] 
+;;     (let[i 2] 
+;;       (println "level 2 =>" i)) 
+;;     (println "level 1 =>" i)) 
+;;   (println "level 0 =>" i))
 
 (def q [])
 (dotimes [i 10] (def q (conj q i)))
