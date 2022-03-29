@@ -3,15 +3,32 @@
 (ns types)
 
 (import java.lang.String)
+(import java.lang.StringBuilder)
 (import java.lang.Byte)
 (import java.lang.Integer)
 (import java.lang.Double)
+(import java.lang.Boolean)
 (import java.math.BigDecimal)
 (import java.math.BigInteger)
 (import java.util.Date)
+(import java.util.Calendar)
+(import java.util.TimeZone)
+(import java.time.MonthDay)
 (import java.io.File)
 (import java.nio.file.Path)
 (import java.util.Scanner)
+(import java.lang.Math)
+(import java.lang.StrictMath)
+
+;; required by default
+;; clojure.core/int
+;; clojure.core/double
+;; repl will load the following
+;; (clojure.repl/dir clojure.core)
+(require 'clojure.core)
+(require 'clojure.repl)
+(println "..." (clojure.repl/dir types))
+(read-line)
 
 ;; preferred
 (def b0 (byte 1))
@@ -51,6 +68,11 @@
 ))
 (println xs)
 (println)
+
+(refer 'clojure.repl)
+(println "dir ..." (dir types))
+(println "dir ..." (clojure.repl/dir types))
+(read-line)
 
 ;; meta
 (defn f[x y](+ x y))
@@ -112,9 +134,71 @@
 )
 (println types/floattypes)
 
+(def msg1 "foo")
+(def msg2 (String. "bar"))
+(println msg1 "=>" (.length msg1))
+(println msg2 "=>" (.length msg2))
+(println msg1 "=>" (. msg1 length))
+(println msg2 "=>" (. msg2 length))
+(println "(Math/PI)" (Math/PI))
+(println "(. Math)" (Math/PI))
+(println (.charAt "foo" 0))
+(println (. "foo" charAt 0))
+(println (= (String/valueOf 1234) (. String valueOf 1234)))
+
 (.concat "1" (String. "2"))
 (.concat (String. "2") "1")
 (.concat "1" "2")
+(. "1" concat "2")
+
+(def ^Double msg_bytes (. "abcd" getBytes))
+(count msg_bytes)
+
+(char-array 10)
+(byte-array 10)
+(short-array 10)
+(int-array 10)
+(long-array 10)
+(float-array 10)
+(double-array 10)
+(def ia10 (int-array 10))
+(count ia10)
+(def ia10_init_def (int-array 10 1))
+(def ia10_init_vec (int-array [1 2 3 4 5 6 7 8 9 10]))
+
+(subvec [1 2 3 4] 0 4)
+(contains? [1 2 3 4] 1)
+(make-array Double 2)
+(make-array Double 2 2)
+(make-array Double 2 2 2)
+(make-array Double/TYPE 2)
+(make-array Double/TYPE 2 2)
+(make-array Double/TYPE 2 2 2)
+(def d2x2 (make-array Double 2 2))
+(def d2x2 (make-array Double/TYPE 2 2))
+(aget d2x2 0 0)
+(aget d2x2 0 1)
+(aget d2x2 1 0)
+(aget d2x2 1 1)
+(aset d2x2 0 0 100)
+(aset d2x2 0 1 200)
+(aset d2x2 1 0 300)
+(aset d2x2 1 1 400)
+(aget d2x2 0 0)
+(aget d2x2 0 1)
+(aget d2x2 1 0)
+(aget d2x2 1 1)
+
+(take 10 (range 100))
+(drop 10 (range 100))
+(take-last 10 (range 100))
+(drop-last 10 (range 100))
+(first (range 100))
+(last (range 100))
+(rest (range 100))
+(def c (cycle '(1 2 3 4)))
+(take 10 c)
+(take 10 (repeat 1))
 
 (.toString (Date.))
 (println "pwd => " (.getCanonicalPath (File. ".")))
@@ -133,9 +217,81 @@
                  (flush)
                  (if (> i 0) (recur (dec i)))))
 
+;; ref
+(def rval (ref 0))
+(println "rval =>" (deref rval))
+(println "rval =>" @rval)
+(dosync (ref-set rval (inc (deref rval))))
+(println "rval =>" (deref rval))
+
+;; unbound values
+(declare ys)
+(def zs)
+
+; false | true
+(def t0 (Boolean. "true"))
+(def f0 (Boolean. ""))
+(def t1 (boolean 1))
+(def f1 (boolean nil))
+;; note, that (Boolean. everything-false-but-string-"true"-case-not-relevant)
+;; note, that (boolean, everthing-true-but-nil)
+
+;; use = require, refer
+(use 'clojure.pprint)
+(def a0 (atom 1))
+(pprint a0)
+(reset! a0 0)
+(pprint a0)
+
+(def sb(StringBuilder.))
+(.length sb)
+(.capacity sb)
+(.append sb "foo")
+(.toString sb)
+(.append sb "bar")
+(.toString sb)
+(.append sb "1234567890")
+(.capacity sb)
+(.append sb "a")
+(.capacity sb)
+(.append sb \a)
+(.capacity sb)
+(.toString sb)
+(.reverse sb)
+(.toString sb)
+(.append sb (int 1))
+(.append sb (long 1))
+
+;; (Character/toChars 48)
+;; codePoint -> UTF16
+
+(= (Math/sin 0) (StrictMath/sin 0))
+(not= (Math/sin 0) (StrictMath/sin Math/PI))
+
+(println "function block")
+(interpose 0 [1 2 3 4])
+(interpose \space "foobar")
+(interleave [0 0 0 0] [1 1 1 1] [2 2 2 2] [3 3 3 3] [4 4 4 4])
+(interleave "foo" "bar" "baz")
+(def ones (repeat 1))
+(def onetwo (cycle [1 2]))
+(def randints (repeatedly #(rand-int 100)))
+(def randdoubles (repeatedly #(Math/random)))
+(def randdoubles2 (repeatedly (fn[](Math/random))))
+;; in script not evaluated
+(repeat 1)
+(cycle [1 2])
+;; (doall (repeat 1))
+;; (doall (cycle [1 2]))
+(println "function block ends")
+
 ;; flush is needed, "\n" does not flush
 (dotimes [i 10] (do (printf "[%d/%d] = %s\n" i 10 i) (flush) (Thread/sleep 100)))
 (dotimes [_ 10] (print ">>" 1 2 3 4 "\n"))
 (let [ans (read-line)] (cond (= ans "1") (System/exit 1)  true (System/exit 0) ))
 (System/exit (Integer/parseInt (read-line)))
+
+
+
+
 

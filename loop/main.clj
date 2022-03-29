@@ -2,6 +2,8 @@
 
 (ns main)
 
+(require 'clojure.pprint)
+
 ;; list comprehension
 ;; for
 ;; (for [i (range 10)] i)
@@ -16,6 +18,11 @@
 
 ;; dotimes
 ;; (dotimes [i 10] (println i))
+;; (dotimes [i 10] (println 1) (println 2) (println 3) (println 4))
+
+;; doseq
+;; (doseq [i (range 10)] (println i))
+;; (doseq [i (range 10) j (range 10)] (println i j))
 
 ;; loop
 ;; (loop [i 0] (do (println i) (if (< i 10) (recur (inc i)))))
@@ -33,12 +40,40 @@
 ;;     (println "level 1 =>" i)) 
 ;;   (println "level 0 =>" i))
 
+
+(doseq [i (range 10)] (print i))
+(dotimes [i 10] (print i))
+(doseq [i (range 10) j (range 10)] (print (format "(%s,%s); " i j)))
+
 (def q [])
 (dotimes [i 10] (def q (conj q i)))
 (println "q =" q)
 
 (loop [i 100 x 0] (if (zero? i) x (recur (dec i) (+ x i))))
 (println (loop [i 100 x 0] (if (zero? i) x (recur (dec i) (+ x i)))))
+(loop [i 10] (if (not= 0 i) (do (println i) (recur (dec i)))))
+(loop [i 10] (if (= 0 i) nil (do (println i) (recur (dec i)))))
+
+;; iterate through set
+(for[i (seq #{1 2 3 4})]i)
+(for[i (seq (sorted-set 1 2 3 4))]i)
+
+;; pprint prints the content of array
+(def xs (int-array 10 1))
+(clojure.pprint/pprint xs)
+(print xs)
+(def arr10x10b (make-array Integer 10 10))
+(clojure.pprint/pprint arr10x10b)
+(def arr10x10 (make-array Integer/TYPE 10 10))
+(clojure.pprint/pprint arr10x10)
+(aget arr10x10 0 0)
+(aget arr10x10 9 9)
+(aset arr10x10 0 0 (Integer. "100"))
+(aset arr10x10 9 9 (int 1000))
+(aget arr10x10 0 0)
+(aget arr10x10 9 9)
+(def arr10x10r1 (make-array clojure.lang.Ratio 10 10))
+(def arr10x10r2 (make-array (type 1/10) 10 10))
 
 (def strarr (.split "foo/bar/foobar" "/"))
 (type strarr)
@@ -159,4 +194,8 @@
 ;;      (catch Exception e (println "exception")) 
 ;;      (finally (println "finally")))
 
+(def nums1 (for[i (range 1000000000000)]i))
+(def nums2 (map #(identity %1)nums1))
+(take 10 nums2)
+(take 10 (drop 10 nums2))
 
