@@ -291,7 +291,47 @@
 (let [ans (read-line)] (cond (= ans "1") (System/exit 1)  true (System/exit 0) ))
 (System/exit (Integer/parseInt (read-line)))
 
+;; (def ^{})
+(def ^{:z "info"} ^Double x 1.0)
+(println (meta (var x)))
+(def ^{:z "info" :foo "bar"} ^Double y 1.0)
+(println (meta (var y)))
+(def ^{:z "info" :foo "bar"} ^Double ^{:foo "baro"} z 1.0)
+(println (meta (var z)))
+;; (defn ^{})
+(def ^{:z "info" :foo "bar"} ^Double ^{:foo "baro"} f[] 1.0)
+(println (meta (var f)))
 
+;; threading macro
+(defn f1[x1]x1)
+(defn f2[x1 x2]x2)
+(defn f3[x1 x2 x3]x3)
+(-> 1 (f1) (f1) (f1) (f1))
+(->> 1 (f1) (f1) (f1) (f1))
+(-> 1 (f2 0) (f2 1) (f2 2) (f2 3))
+(->> 1 (f2 0) (f2 1) (f2 2) (f2 3))
+(defn log[value msg](str msg "," value))
+(->> "info: " (log 1)(log 2)(log 3)(log 4))
 
+(assert (< 1 2))
+(assert (> 2 1))
+(assert (= 1 1))
+(assert (not= 0 1))
+(assert false "asserton failure message")
+
+(map type #{})
+(map type #{1 2 3 4})
+(map #(type %) #{1 2 3 4})
+(map #(list (identity %)(type %)) #{1 2 3 4})
+(map #(list (identity %)(type %)) #{1 2.0 3N 4M})
+
+(format "%s=%s" 1 1)
+(+ 1/3 2/3)   ;; converts to BigInt
+(byte 1N)     ;; cast BigInt to byte
+(byte 127N)   ;; cast BigInt to byte => OK
+(byte 128N)   ;; cast BigInt to byte => Exception
+
+(+ 2r11 16r11 10r100)
+(assert (= 16r111 0x111))
 
 
