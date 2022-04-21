@@ -329,6 +329,13 @@
 (condp = 1 0 "got 0" 1 "got 1" "something else")
 (condp = 10 0 "got 0" 1 "got 1" "something else")
 
-
+;; condp is a function of 2 parameters
+;; first parameter is supplied directly
+;; second parameter is supplied from the corresponding line
+(condp #(= %1 %2) 1 
+  1 "eins"
+  2 "zwei"
+  3 "drei"
+  4 "vier")
 
 
