@@ -338,4 +338,89 @@
   3 "drei"
   4 "vier")
 
+;; lazy sequence x, f(x), f(f(x)) ...
+(def nums (iterate #(+ 1 %) 0))
+(print (take 10 nums))
+
+(let [c0 16r20 c1 (+ c0 10)] (map #(char %) (range c0 c1)))
+
+;; thread last
+(->> (range 10) (filter #(> % 5)) (into []))      ;; ordering preserved
+(->> (range 10) (filter #(> % 5)) (into '()))     ;; ordering not preserved
+(->> (range 10) (filter #(> % 5)) (into (list)))  ;; ordering not preserved
+(->> (range 10) (filter #(> % 5)) (into #{}))     ;; no ordering for sets
+
+;; cast
+(into)      ;; returns [] persistent vector
+(into {})   ;; returns {} persistent array map
+(into #{})  ;; returns #{} persistent hash set
+;; (into {} 1)    ;; error
+;; (into {} [1])  ;; error
+(into {} [[1 100]])
+(into {} [[1 100] [2 200]])
+
+(def values #{1 2 3 4})
+(into [] values)
+(def values [1 2 3 4])
+(into #{} values)
+(def values '(1 2 3 4))
+(into (vector) values)
+
+;; arraymap from keys and values
+(def k [1 2 3 4])
+(def v [10 20 30 40])
+(zipmap k v)
+(zipmap [1] [10 20])  ;; {1 10}
+(zipmap [1 2] [10])   ;; {1 10}
+
+;; sequence interface
+;; first, rest
+(first [1 2 3 4])
+(rest [1 2 3 4])
+(cons 5 [1 2 3 4])
+;; other functions
+(second [1 2 3 4])
+(nth [1 2 3 4] 0)       ;; count from 0
+(nth [1 2 3 4] 4)       ;; index out of bounds exception
+(nth [1 2 3 4] 4 nil)   ;; OR default value when provided
+(first [])              ;; nil when empty
+
+;; unique values
+(distinct [1 1 2 2 3 3 4 4])
+(distinct '(1 1 2 2 3 3 4 4))
+;; (distinct #{1 2 3 4})  ;; not supported
+;; (distinct {1 2 3 4})   ;; not supported
+
+(frequencies (range 10))          ;; array map
+((frequencies (range 10)) 0)      ;; 1
+((frequencies (range 10)) 100)    ;; nil
+((frequencies (range 10)) 100 0)  ;; 0
+
+;; shortest sequence
+(interleave [1 2 3 4] [10 20 30 40])
+(interleave [1 2 3 4 5] [10 20 30 40])
+(interleave [1 2 3 4] [10 20 30 40 50])
+
+(interpose 0 [1 2 3 4])
+
+;; pairs are not grouped in vector
+(cond false 0 false 1 true 2)         ;; 2
+(cond false 0 false 1 false 2)        ;; nil
+(condp #(= %1 %2) 2 0 10 1 20 2 30)   ;; 30
+;; (condp #(= %1 %2) 5 0 10 1 20 2 30)   ;; error => no matching clause 5
+
+;; random
+(shuffle (range 10))
+(println "shuffle equals or not =>"
+  (=
+    (shuffle (range 10))
+    (shuffle (range 10))))
+
+;; pythons choice
+(rand-nth (range 10))
+
+(drop (range 10))
+(reverse (range 10))
+(group-by #(odd? %) (range 10))
+
 
