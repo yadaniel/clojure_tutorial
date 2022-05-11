@@ -381,7 +381,7 @@
 ;; other functions
 (second [1 2 3 4])
 (nth [1 2 3 4] 0)       ;; count from 0
-(nth [1 2 3 4] 4)       ;; index out of bounds exception
+;; (nth [1 2 3 4] 4)       ;; index out of bounds exception
 (nth [1 2 3 4] 4 nil)   ;; OR default value when provided
 (first [])              ;; nil when empty
 
@@ -422,5 +422,49 @@
 (drop (range 10))
 (reverse (range 10))
 (group-by #(odd? %) (range 10))
+
+(concat [])
+(concat [] [])
+(concat [] [] [])
+(concat [] [] [] [])
+(concat "1234" "5678" "9")
+(apply concat ["123" "456" "789" ""])
+(concat '(1 2 3) [4 5 6] "789")
+(set (map type (concat '(1 2 3) [4 5 6] "789")))
+
+(require 'clojure.string)
+(require ['clojure.string :as 'clstr])
+(mapcat clstr/upper-case ["foo" "bar"])
+(map char "foo")
+(str \f \o \o)
+(assert (= (apply str (map char "foo")) "foo"))
+
+;; unpack lazyseq
+(into [] (for[i [1 2 3 4]] 1))
+(into '() (for[i [1 2 3 4]] 1))
+
+;; exception handling
+;; (try (/ 1 0) (catch Exception e (print e)))
+;; (try (/ 1 0) (catch Exception e (type e)))
+;; (try ([1 2 3 4] 10) (catch Exception e (type e)))
+
+;; ((juxt f1 f2 f3 f4) x) => [(f1 x) (f2 x) (f3 x) (f4 x)]
+(println ((juxt :foo :bar) {:foo 1 :bar 2 :foobar 3}))
+
+(def s "a b c d")
+(for[i (.split s " ")]i)
+(clojure.string/split s #" ")
+
+(clojure.set/union #{1 2 3 4 5} #{5 6 7 8 9})
+(clojure.set/difference #{1 2 3 4 5} #{5 6 7 8 9})
+(clojure.set/intersection #{1 2 3 4 5} #{5 6 7 8 9})
+;; (require 'clojure.set)
+;; (refer 'clojure.set)
+
+;; TODO
+
+;;
+(print "done")
+
 
 
