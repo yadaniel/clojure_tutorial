@@ -26,7 +26,7 @@
     (print (java.util.Date.))))
 
 ;; classical for loop
-(let [i (atom 0) n 100]
+(let [i (atom 0) n 20]
   (while (< @i n) 
     (printf "iteration [%s,%s,%s]\n" @i n (int (/ (System/currentTimeMillis) 1000)))
     (flush)
@@ -41,7 +41,11 @@
 (println "cnt up => " @cnt)
 (loop [i 0] (if (< i 10) (do (down)(recur (inc i)))))
 (println "cnt down => " @cnt)
-(def cnt' (for[i (range 5)] (shift-by i)))
+;; (def cnt' (for[i (range 5)] (shift-by i)))
+(def cnt' (doall (for[i (range 5)] (shift-by i))))
+;; (def cnt' (vec (for[i (range 5)] (shift-by i))))
+;; (def cnt' (list (for[i (range 5)] (shift-by i))))
+;; (def cnt' [(for[i (range 5)] (shift-by i))])
 (println "cnt shift1 => " @cnt)
 (println "cnt' => " cnt')
 (println "cnt shift2 => " @cnt)
