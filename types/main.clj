@@ -334,4 +334,7 @@
 (+ 2r11 16r11 10r100)
 (assert (= 16r111 0x111))
 
+(println "(instance? java.lang.Object 1) => " 
+        (instance? java.lang.Object 1))
+
 
