@@ -36,11 +36,11 @@
 (take 10 (foo' 0))
 
 (defn fibs[a b] (lazy-seq (cons a (fibs b (+ a b)))))
-(prn (take 10 (fibs 1 1)))
+(prn (take 100 (fibs 1N 1)))
 
 ;; wrapped
-(defn fibs''[] ((fn fibs'[a b] (lazy-seq (cons a (fibs' b (+ a b))))) 1 1))
-(prn (take 10 (fibs'')))
+(defn fibs''[] ((fn fibs'[a b] (lazy-seq (cons a (fibs' b (+ a b))))) 1N 1))
+(prn (take 100 (fibs'')))
 
 ;; let fibs = 1:1: zipWith (+) fibs (tail fibs)
 (defn f[] (let [xs '()] (loop [a 1 b 1] (cons a xs) (recur b (+ a b)))))
