@@ -351,3 +351,94 @@
   []
   (range))
 
+;; ignore acc, provide initial and empty collection
+(reduce (fn[acc x]x) 0 [])
+(reduce (fn[acc x]x) 1 [])
+(defn f[] (lazy-seq (cons 1 (f))))
+(take 20 (f))
+(defn f[x] (lazy-seq (cons x (f x))))
+(take 20 (f 1))
+(defn f[x] (lazy-seq (cons x (f (inc x)))))
+(take 20 (f 0))
+
+(take 20 (repeatedly (fn[]1)))
+(take 20 (repeatedly 10 (fn[]1)))
+(drop 20 (repeatedly 80 (fn[](rand-int 100))))
+(take-while (fn[x](not= x 0)) (repeatedly (fn[](rand-int 100))))
+(drop-while (fn[x] (< x 10)) (range 100))   ;; will drop 0..9
+(drop-while (fn[x] (< x 10)) (cons 10 (range 100)))   ;; will drop nothing
+(take-while (fn[x] (< x 10)) (range 100))   ;; will take 0..9
+(take-while (fn[x] (< x 10)) (cons 10 (range 100)))   ;; will take nothing
+
+;; ((0 1) (1 2) (2 3) (3 4) (4 5) (5 6) (6 7) (7 8) (8 9))
+(partition 2 (range 10))    ;; in chunks of size 2
+(partition 2 1 (range 10))  ;; default step is 1
+;; ((0 1) (2 3) (4 5) (6 7) (8 9))
+(partition 2 2 (range 10))  ;; in chunks of 2 with step 2 (from subseq to subseq)
+
+;; zipping elements
+(map (fn[x y z][x y z]) (range)(range)(range 10))
+(map (fn[x y][(+ x y)(* x y)]) (range)(range 10))
+
+;; map for vector, efficient version
+(type (mapv (fn[x]x) []))   ;; PersistentVector
+(type (map (fn[x]x) []))    ;; LazySeq
+;; given sequences are provided as arguments
+(type (mapv (fn[x y](+ x y)) [0] [0]))
+(type (map (fn[x y](+ x y)) [0] [0]))
+;; usage
+(println (mapv (fn[x y](+ x y)) [] []))           ;; works with empty vectors
+(println (mapv (fn[x y](+ x y) (* x y)) [0 1 2 3] [4 5 6 7 8]))   ;; addition resuls is skipped
+(println (mapv (fn[x y] [(+ x y) (* x y)] ) [0 1 2 3] [4 5 6 7 8]))   ;; lower sequences defines the length
+;;
+(println (mapv (fn[[x y]] (+ x y)) [[1 1]]))
+(println (mapv (fn[[x y :as xy]] (+ x y)) [[1 1]]))
+(println (mapv (fn[[x y] [a b]] [(+ x a) (* y b)]) [[1 1]] [[2 2]]))
+(println (mapv (fn[[x y :as xy] [a b :as ab]] [(+ x a) (* y b)]) [[1 1]] [[2 2]]))
+
+(hash-map :A 1, :B 2)       ;; keys and vals
+(into {} [[:A 1], [:B 2]])  ;; vector of keys and vals
+(zipmap [:A :B] [1 2])      ;; keys and vals separate
+
+;; read from console and type convert it
+;; 1 => Long
+;; 1.1 => Double
+;; 1/3 => Ratio
+;; foo => Symbol
+;; :foo => Keyword
+;; "foo" => String
+(def q (read))
+
+;; common functions from string namespace
+(clojure.string/split-lines "foo\nbar\nfoorbar")
+(clojure.string/split "foo\nbar\nfoobar" #"\n")
+(clojure.string/split "foo;bar;foobar" #";")
+;; without full namespace
+(require '[clojure.string :as string])
+(string/split-lines "foo\nbar\nfoorbar")
+(string/split "foo\nbar\nfoobar" #"\n")
+(string/split "foo;bar;foobar" #";")
+;; refer directly in this namespace
+(require '[clojure.string :as string :refer [split-lines, split]])
+(split-lines "foo\nbar\nfoorbar")
+(split "foo\nbar\nfoobar" #"\n")
+(split "foo;bar;foobar" #";")
+
+(require '[clojure.string :as string])
+(string/join \: ["foo" "bar" "foobar"])
+
+;; (require '[clojure.java.io :as io])
+;; (def r (io/reader "data"))
+;; (. r read)
+
+;; read from file
+(defn char-stream[reader] (lazy-seq (cons (.read reader) (char-stream reader))))
+(def data-reader (io/reader "data"))
+(def txt-chars (map char (take-while #(not= -1 %) (char-stream data-reader))))
+(def txt-str (apply str txt-chars))
+;; simple
+(def txt (slurp "data"))
+(println "txt-str == txt => " (= txt-str txt))
+
+(dotimes [_ 10] (Thread/sleep 1000) (println ((clojure.string/split (str (java.util.Date.)) #" ") 3)))
+
