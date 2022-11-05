@@ -407,7 +407,10 @@
 ;; foo => Symbol
 ;; :foo => Keyword
 ;; "foo" => String
-(def q (read))
+(do 
+  (print "enter: ")
+  (flush)
+  (def q (read)))
 
 ;; common functions from string namespace
 (clojure.string/split-lines "foo\nbar\nfoorbar")
@@ -424,12 +427,33 @@
 (split "foo\nbar\nfoobar" #"\n")
 (split "foo;bar;foobar" #";")
 
+;; further string functions
 (require '[clojure.string :as string])
 (string/join \: ["foo" "bar" "foobar"])
+(string/replace "abcde" "e" "")
+(string/replace "abcde" "e" "ee")
+(string/replace "foO" #"[oO]" "a")
+(string/replace "foO" #"(?i)o" "a")
+(string/replace "foO" #"(?i)O" "a")
+(string/replace "var    =   100" #"(\w+)\s+=\s+(\d+)" "$2 = $1")
+(string/trim " abcde ")
+(string/triml " abcde ")
+(string/trimr " abcde ")
+(string/trim-newline "\nline1\nline2\nline3\nline4\n")  ;; remove the last newline
+(count " abcde ")
+(.length " abcde ")
+(. " abcde " length)
+(def s0 (String.))
+(def s1 (String. ""))
+(def s2 (String. "f"))
+(.concat (.concat s0 "foo") "bar")
 
-;; (require '[clojure.java.io :as io])
-;; (def r (io/reader "data"))
-;; (. r read)
+(defn remove-non-printable-characters [x]
+  (clojure.string/replace x #"\p{C}" ""))
+
+(require '[clojure.java.io :as io])
+(def r (io/reader "data"))
+(. r read)
 
 ;; read from file
 (defn char-stream[reader] (lazy-seq (cons (.read reader) (char-stream reader))))
@@ -441,4 +465,124 @@
 (println "txt-str == txt => " (= txt-str txt))
 
 (dotimes [_ 10] (Thread/sleep 1000) (println ((clojure.string/split (str (java.util.Date.)) #" ") 3)))
+
+(def m (group-by #(> % 10) (range 20)))
+(m true)
+(m false)
+
+(map #(let[[a b]%](format "%s %s" a b)) [[1 2]])
+(map #(format "%s %s" (first %) (second %)) [[1 2]])
+(map #(format "%s %s" (% 0) (% 1)) [[1 2]])
+(map #(format "%s %s" (nth % 0) (nth % 1)) [[1 2]])
+
+;; using apply
+;; arguments to apply must be within a vector or list
+(apply + [1 2 3 4])
+(apply (fn[a b c d] (+ a b c d)) [1 2 3 4])
+(apply (fn[a b c d] (+ a b c d)) '(1 2 3 4))
+
+;; using subvec => inclusive index, exclusive index => returns vector
+(subvec (vec (range 10)) 1)     ;; from 1 to end of sequence
+(subvec (vec (range 10)) 1 2)   ;; from inclusive 1 to exclusive 2
+(subvec (vec (range 10)) 1 1)   ;; empty
+;; (subvec (vec (range 10)) 1 11)  ;; exception index-out-of-bounds
+
+;; there is no substr function
+;; note, using mapv will map and convert result to vector
+;; subvec requires vector and will not work with list
+(defn substr
+  ([s, i](apply str (subvec (mapv char s) i)))
+  ([s, i, j](apply str (subvec (mapv char s) i j))))
+
+;; divmod
+(defn divmod[x y] [(quot x y) (mod x y)])
+(format "%s" (range 10))
+(format "%s" (map (fn[x]x) (range 10)))
+(format "%s" (map identity (range 10)))
+(format "%s" (mapv (fn[x]x) (range 10)))    ;; convert to vector, evaluates lazy seq
+(format "%s" (apply str (map (fn[x]x) (range 10))))   ;; apply str evaluates lazy seq
+(format "%s" (apply str (map (fn[x] (str x " ")) (range 10))))   ;; apply str evaluates lazy seq
+(format "%s" (string/join "," (map (fn[x]x) (range 10))))
+
+(->> 1 (+ 2) (* 10))
+(->> 1 (+ 2) (* 10) (#(cons % ())))
+(->> 1 (+ 2) (* 10) (#(conj () %)))
+
+(map key {:a 1, :b 2})
+(key (clojure.lang.MapEntry. :a :b))  ;; returns :a
+(conj {} (clojure.lang.MapEntry. :a :b))
+(into {} (map (fn[x y][(keyword (str "X" x)) y]) (range 10) (range 10)))
+
+(.toLowerCase "FOO")
+(.toUpperCase "foo")
+
+;; forward declaration => unbound
+(def forward_x)
+(intern 'user 'forward_y)
+
+(require 'clojure.inspector)
+(clojure.inspector/atom? (atom 1))
+(clojure.inspector/atom? (ref 1))
+
+(def f (comp + +))
+(f 1 1)
+(def f (comp + + +))
+(f 1 1)
+(def f (comp inc inc inc inc))
+(f 0)
+(def f (comp (fn[x](+ 10 x)) (fn[x](* 2 x))))   ;; from right to left
+(f 0)
+
+(concat [][][][])
+(concat [1][2 3][4 5 6][7 8 9 10])
+(concat '(1) '(2 3))
+(concat '(1) '(2 3) [4])
+(concat {:foo 1} {:bar 2} {})
+(into {} (concat {:foo 1} {:bar 2} {}))
+(concat #{1 2 3} #{4 5 6} #{1 7 10})
+(concat #{1 2 3} #{4 5 6} #{1 7 10} [1] '(1 0))
+
+(apply str (interpose \_ "Hello"))
+(interpose 0 [1 2 3 4])
+(list* '(1 2 3 4))
+(shuffle (range 10))
+(map (fn[x](apply + x)) (for[_ (range 10)] (shuffle (range 10))))
+(some #{1 2 3 4} [1 2 3 4])
+
+(Integer/toBinaryString 15)
+(Integer/toHexString 15)
+(Integer/toOctalString 15)
+
+(Integer/parseInt "10")
+(Integer/parseInt "10" 10)
+(Integer/parseInt "10" 2)
+(Integer/parseInt "10" 16)
+
+(string/join \, "foobar")
+(string/join \, (map char "foobar"))
+(apply str (interpose \, "foobar"))
+
+((partial (fn[x y](+ x y)) 10) 20)
+(def p (partial (fn[x y](+ x y)) 10))
+(defn q[y] (p y))
+
+;; parition, arg1 = size of partition, arg2 = increment between partitions
+;; not full partitions are skipped
+(= (partition 2 (range 10)) (partition 2 (range 11)))   ;; floor(11/2)
+(= (partition 2 (range 10)) (partition 2 2 (range 10)))
+(= (flatten (partition 1 (range 10))) (range 10))
+(partition 1 (range 10))    ;; list of lists of one element
+(partition 3 (range 10))  
+
+;; flatten, apply concat
+(= (apply concat [[1] [2]]) (flatten [[1] [2]]))
+(= (apply concat (apply concat [[[1]] [[2]]])) (flatten [[[1]] [[2]]]))
+
+(= Double/NaN Double/NaN)
+(= Double/POSITIVE_INFINITY Double/POSITIVE_INFINITY)
+(= Double/NEGATIVE_INFINITY Double/NEGATIVE_INFINITY)
+(- Double/POSITIVE_INFINITY Double/POSITIVE_INFINITY)
+(- Double/NEGATIVE_INFINITY Double/NEGATIVE_INFINITY)
+
+
 
