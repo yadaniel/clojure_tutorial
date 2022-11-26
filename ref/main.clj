@@ -27,6 +27,8 @@
 (vector? '())
 (= (vector [1 2 3 4] [1 2 3 4]) (vec (list (list 1 2 3 4) (list 1 2 3 4))))
 (= (vector [1 2 3 4] [1 2 3 4]) (vec (list (vec (list 1 2 3 4)) (vec (list 1 2 3 4)))))
+(def vi0 (vector-of :int))
+(def vi1 (vector-of :int 1 2 3 4))
 
 (into [1 2 3 4] [5 6 7 8])
 (into [1 2 3 4] '(5 6 7 8))
@@ -206,6 +208,29 @@
 
 (->> 1 (Math/pow 2))
 (->> (range 10) (map #(Math/pow 2 %)))
+(println (Math/sin 0))
+(println (Math/asin 0))
+(println (Math/cos 0))
+(println (Math/acos 0))
+(println (Math/tan 0))
+(println (Math/atan 0))
+(println (Math/sinh 0))
+(println (Math/cosh 0))
+(println (Math/tanh 0))
+(println (list Math/PI Math/E))
+(println (Math/sqrt 4))
+(println (Math/floor 1.1))
+(println (Math/ceil 1.1))
+(println (Math/abs -1.1))
+(println (Math/log10 1))
+(println (Math/log Math/E))
+(println (Math/random))
+(println (clojure.core/rand))
+(println (clojure.core/rand 10))
+(min 1 2 3 4 0)
+(max 1 2 3 4 0)
+(clojure.core/min 1 2 3 4 0)
+(clojure.core/max 1 2 3 4 0)
 
 (take-while (fn[x](< x 10)) (range 100))
 (drop-while (fn[x](< x 10)) (range 100))
@@ -584,5 +609,73 @@
 (- Double/POSITIVE_INFINITY Double/POSITIVE_INFINITY)
 (- Double/NEGATIVE_INFINITY Double/NEGATIVE_INFINITY)
 
+;; bit wise
+(def kb (bit-shift-left 1 10))
+(def mb (bit-shift-left 1 20))
+(= (bit-shift-right 16 4) 1)
+(= (bit-or 1 2 4 8 16) 31)
+(= (bit-and 1 2 4 8 16) 0)
+(bit-xor 0 1)
+(bit-not 0)   ;; -1, type Long
+(defn bit-identity'[x] (bit-xor (bit-xor x 0xFFFF) 0xFFFF))
+(defn bit-identity''[x] (bit-xor (bit-xor x 0x0000) 0x0000))
+
+;; java interop Character
+(Character/isWhitespace \a)
+(Character/isLowerCase \a)
+(Character/isUpperCase \a)
+(Character/isDigit \1)
+(Character/isLetter \a)
+(Character/isISOControl \a)
+(Character/isLetterOrDigit \a)
+(map #(Character/isWhitespace %) "foo bar\tfoobar\n")
+
+;; record
+(defrecord point3d [x1 x2 x3])
+(def origin3d (point3d. 0 0 0))
+(:x1 origin3d)
+(-> origin3d :x1)
+(get origin3d :x1)
+
+;; (+ (read) (read))
+
+;; java array
+(def l (make-array Long 10))
+(pprint l)
+(aset l 0 1)
+(pprint l)
+(println (count l))
+
+;; repl
+(require '[clojure.pprint :as pp :refer [pprint]])
+(clojure.pprint/pprint 1)
+(pp/pprint 1)
+(pprint 1)
+(resolve 'pprint)
+(clojure.main/repl :print :pprint)
+
+;; will require and refer all functions
+(use 'clojure.pprint)
+(use 'clojure.string)   ;; warning => clojure.core/revere, clojure.core/replace replaced
+
+(let [[a b c d] [1 2 3 4]] a)
+(let [[a b c d] (range 10)] a)
+(let [[a b c d & e] (range 10)] a)
+(let [[a b c d & e] (range 10)] e)
+
+(let [] 1)
+(fn [] 1)
+((fn [] 1))
+
+((fn [[]] 1) 2)
+((fn [{}] 1) 2)
+
+((fn [[a b c d]] a) [1 2 3 4])
+((fn [{a :a}] a) {:a 1})
+((fn [{a :a, b :b}] a) {:a 1, :b 2})
+((fn [{a :a, b :b, :as xs}] xs) {:a 1, :b 2})
+
+((fn[& x](nth x 0)) 1 2 3 4)
+((fn[& x](nth x 0)) [1 2 3 4])
 
 
