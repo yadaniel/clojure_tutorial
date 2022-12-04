@@ -678,4 +678,58 @@
 ((fn[& x](nth x 0)) 1 2 3 4)
 ((fn[& x](nth x 0)) [1 2 3 4])
 
+(interleave (range 10) (map char (range 48 100)))
+(interleave (range 10) (map char (range 48 100)) [:foo :bar :foobar])
+
+(System/getenv "PATH")
+(def e (System/getenv))
+(def e' (into {} e))
+(e' "PATH")
+
+(apply vector (range 10))
+(vector 1 2 3 4 5 6 7 8 9)
+(vec (range 10))
+
+(import java.util.jar.JarFile)
+(def f (JarFile. "./A.jar"))
+(while (.hasMoreElements entries)
+    (let [entry (.nextElement entries)]
+        (println (.getName entry))))
+
+;; \n = \r\n, but not \n\r or \r
+(require '[clojure.string :as str])
+(=
+  (str/split-lines "foo\nbar")
+  (str/split-lines "foo\r\nbar"))
+
+(import javax.swing.JFrame)
+(import '[java.util Date UUID Random Locale Timer OptionalInt Calendar Base64])
+(import '[java.time Clock LocalTime LocalDate Year Instant MonthDay])
+
+(.nextInt (Random.))
+(def r (Random.))
+(.setSeed 0 r)
+(.nextLong r)
+
+(.nextDouble (doto (Random.) (.setSeed 0) (.nextLong)))
+(.nextDouble (doto (Random.) (.setSeed 0)))
+
+(def bx (byte-array 10))
+(pprint bx)
+(.nextBytes r bx)
+(pprint bx)
+
+(while (< (.nextInt r) 1000000) (pprint "here"))
+
+(let [r (doto (Random.) (.setSeed 0)), v (atom 0)] 
+  (while (do 
+           (reset! v (mod (.nextInt r) 100)) 
+           (< @v 80))
+    (pprint (str "value was " @v))))
+
+(.millis (Clock/systemUTC))
+
+(let [ms #(.millis (Clock/systemUTC)), now (ms), stop (+ 60000 now)]
+  (while (< (ms) stop) (do (Thread/sleep 100) (println "."))))
+
 
