@@ -732,4 +732,67 @@
 (let [ms #(.millis (Clock/systemUTC)), now (ms), stop (+ 60000 now)]
   (while (< (ms) stop) (do (Thread/sleep 100) (println "."))))
 
+(map #(vec %) [[0 1 2] [3 4 5] [6 7 8]])
+(map #(identity %) [[0 1 2] [3 4 5] [6 7 8]])
+;; (map #(vector 1 2 3) [[0 1 2] [3 4 5] [6 7 8]])  ;; arity 0 => error because arity 1 expected
+;; (map #([ (nth % 0) (nth % 2) ]) [[0 1 2] [3 4 5] [6 7 8]])  ;; error because % used twice
+(map #(let [v %] [(nth v 0) (nth v 2) ]) [[0 1 2] [3 4 5] [6 7 8]])
+(map #(subvec % 0 2) [[0 1 2] [3 4 5] [6 7 8]])
+(map #(map % [0 2]) [[0 1 2] [3 4 5] [6 7 8]])  ;; using vector in function position
+(map [100 200 300 400] [0 3])
+(mapv [100 200 300 400] [0 3])
+
+(def v [(let[x 1]x) (let[x 2]x) (let[x 3]) (let[])])
+(filter #(int? %) v)
+
+(def nums (map #(format "%04d" %) (range 10000)))
+(def nums-filtered (for [[a b c d] nums :when (= a b) :when (= c d) :when (not= b c)] (str a b c d)))
+(count nums-filtered)
+
+;; parse and fill map
+(def pattern #"([a-z]+)=([0-9]+)\s*,?\s*")
+(def text "foo=123, bar=456, foobar=789")
+(def varval (for [[_,var,num] (re-seq pattern text)] [(keyword var) (read-string num)]))
+(def m (into {} varval))
+(def vals (for [k (keys m)] (m k)))
+(print (apply + vals))
+
+(def p1 #"[0-9]+\s+")
+(def p2 (re-pattern "[0-9]+\\s+"))
+(re-seq p1 "123 456 789")
+(re-seq p2 "123 456 789")
+(def p1 #"\b[0-9]+\b")
+(def p2 (re-pattern "\\b[0-9]+\\b"))
+(re-seq p1 "123 456 789")
+(re-seq p2 "123 456 789")
+
+;; using matcher
+(def pattern-num #"\b(?<x>\d+)\b")
+(def m (re-matcher pattern-num "foo 123 bar 456 foobar 789"))
+(while (.find m) (println (.group m "x")))
+(println (.pattern m))
+
+(def count (atom 0))
+;; (def pattern-num #"\b(?<varname>\w+)\s*=\s*(?<varval>\d+)\s*;\b")
+(def pattern-num #"\b(?<varname>\w+)\s*=\s*(?<varval>\d+)\b\s*;")
+(def m (re-matcher pattern-num "foo=123;bar =456;foobar=789;"))
+(while (.find m) (println (.group m "varname") (.group m "varval")) (swap! count inc))
+(println "found " @count " matches")
+
+(try (/ 1 0) (throw (IllegalArgumentException.)) (println "here") (catch ArithmeticException e 1) (catch IllegalArgumentException e 2))
+(try #_(/ 1 0) (throw (IllegalArgumentException.)) (println "here") (catch ArithmeticException e 1) (catch IllegalArgumentException e 2))
+(try #_(/ 1 0) #_(throw (IllegalArgumentException.)) (println "here") (catch ArithmeticException e 1) (catch IllegalArgumentException e 2))
+(try (throw (IllegalArgumentException. "with info")) (println "here") (catch IllegalArgumentException e (println (str e)) 0))
+(try (throw (IllegalArgumentException. "with info")) (println "here") (catch IllegalArgumentException e (println (str e))))
+(try (catch Exception e))
+
+;; conversion map vector
+(into {} (into [] {:a 1, :b 2}))
+
+((juxt (fn[x]x) (fn[x](* 2 x)) (fn[x](* 3 x)) (fn[x](* x 4))) 1) 
+(def f (juxt (fn[x]x) (fn[x](* 2 x)) (fn[x](* 3 x)) (fn[x](* x 4)))) 
+(def v (map f (range 10)))
+(map (fn[[x _ _ _]] x) v)
+
+
 
