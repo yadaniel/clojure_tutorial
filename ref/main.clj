@@ -794,5 +794,67 @@
 (def v (map f (range 10)))
 (map (fn[[x _ _ _]] x) v)
 
+(def cnt (atom 0))
+(defn rand100[] (do (swap! cnt inc) (int (Math/floor (* (rand) 100)))))
+(some (fn[x](= x 50)) (repeatedly rand100))
+(println "cnt => " @cnt)
+
+;; using some with maps
+(some :foo [{},{}])
+(some :foo [{:bar 1, :foo 10},{:foo 1}])        ;; key as function
+(some {:foo 1, :bar 2} [:foobar])
+(some {:foo 1, :bar 2} [:foobar, :foo, :bar])   ;; map as function
+
+(require '[clojure.set :as s])
+(some (fn[m](s/subset? #{:foo,:bar} (into #{} (keys m)))) [{:foo 1},{:bar 2},{:foo 10, :bar 20}])
+(some (fn[m] (every? m [:foo, :bar])) [{:foo 1},{:bar 2},{:foo 10, :bar 20}])
+
+;; fnil
+(fnil (fn[x](println x)) 0)
+((fnil (fn[x](println x)) 0) 0)
+((fnil (fn[x](println x)) 0) 1)
+((fnil (fn[x](println x)) 0) nil)
+
+;; (< 10 _)
+(map (partial < 10) (range 20))
+(filter (partial < 10) (range 20))
+
+;; (div2 1 _)
+(defn div2[x y] (/ x y))
+((partial div2 1) 10)
+
+(def ics-raw (slurp "ics"))
+(def ics-lines (clojure.string/split ics-raw #"\n"))
+(def ics-set (into #{} ics-lines))
+(def ics (frequencies ics-lines))
+(filter (fn[[k v]] (not= v 1)) ics)
+
+(ns-publics *ns*)
+(ns-publics 'clojure.core)
+(ns-publics 'clojure.string)
+
+;; contains? is about key or index
+(contains? {:foo 1} :foo)
+(every? {:foo 1} [:foo])
+
+;; some to check if element in container
+;; partial can be used even when function has one parameter
+(def xs (int-array 10 (range 10)))
+(def ys (into [] (range 10)))
+(some (partial = 5) ys)
+(some (fn[x](= x 5)) xs)
+(some (partial = 10) ys)
+(some (fn[x](= x 10)) xs)
+
+;; partial
+((fn[x y z](+ x y z)) 1 2 3)
+((partial (fn[x y z](+ x y z))) 1 2 3)
+((partial (fn[x y z](+ x y z)) 1) 2 3)
+((partial (fn[x y z](+ x y z)) 1 2) 3)
+((partial (fn[x y z](+ x y z)) 1 2 3))
+
+;; count values
+(frequencies (take 100 (repeatedly #(rand-int 10))))
+
 
 
