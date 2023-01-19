@@ -237,6 +237,7 @@
 
 (reductions #(+ %1 %2) (range 1 10))
 (reductions #(* %1 %2) (range 1 10))
+(reductions (fn[acc x](+ acc x)) -50 (take 100 (repeat 1)))
 
 (take 10 (repeat 1))
 (take 10 (repeatedly (fn[]1)))
@@ -578,10 +579,16 @@
 (Integer/toHexString 15)
 (Integer/toOctalString 15)
 
+;; general use
 (Integer/parseInt "10")
 (Integer/parseInt "10" 10)
 (Integer/parseInt "10" 2)
 (Integer/parseInt "10" 16)
+
+;; use for hex, oct, dec base, base is implicit
+(Integer/decode "0x10")
+(Integer/decode "010")
+(Integer/decode "10")
 
 (string/join \, "foobar")
 (string/join \, (map char "foobar"))
@@ -645,6 +652,10 @@
 (aset l 0 1)
 (pprint l)
 (println (count l))
+
+(def d5 (make-array Double 5))
+(def d10 (make-array Double/TYPE 10))
+(def d10x10 (make-array Double/TYPE 10 10))
 
 ;; repl
 (require '[clojure.pprint :as pp :refer [pprint]])
@@ -855,6 +866,242 @@
 
 ;; count values
 (frequencies (take 100 (repeatedly #(rand-int 10))))
+
+;; combine info [[\A 1 2 3 4] [\B 5 6] [\C 7] [\D 8] [\E] [\F 0 9]]
+(def xs [\A 1 2 3 4 \B 5 6 \C 7 \D 8 \E \F 0 9 \S])
+;; using reduce
+(def xxs (atom []))
+(reduce (fn[acc x] 
+          (if (char? x) 
+            (do (reset! xxs (cons acc @xxs)) [x])   ;; acc into xxs when new char encountered, stop char needed at end
+            (cons x acc)))    ;; include into acc
+        [] 
+        xs)
+(pprint @xxs)
+
+;; using doseq
+(def xxs (atom []))
+(def acc (atom []))
+(doseq [x xs] 
+  (if (char? x) 
+    (do (reset! xxs (conj @xxs @acc)) (reset! acc [x])) 
+    (reset! acc (conj @acc x))))
+(pprint @xxs)
+
+(defn match-ns[fpat n] (filter (fn[f'](re-matches (re-pattern (str ".*" fpat ".*")) f')) (map str (keys (ns-publics n)))))
+(match-ns "refer" 'clojure.core)
+(match-ns 'refer 'clojure.core)
+
+(defmacro Match-ns[fpat n] `(filter (fn[x#](re-matches (re-pattern (str ".*" ~fpat ".*")) x#)) (map str (keys (ns-publics ~n)))))
+(Match-ns "refer" 'clojure.core)
+(Match-ns 'refer 'clojure.core)
+
+(def x1 (atom 0))
+(def x2 (atom 0))
+(for [i (range 10)] (swap! x1 inc))
+(doseq [i (range 10)] (swap! x2 inc))
+(println "x1 => " @x1 ", x2 => " @x2)
+(println (= @x1 @x2))
+
+(def x1 (atom []))
+(def x2 (atom []))
+(for [i (range 10)] (swap! x1 #(conj % i)))
+(doseq [i (range 10)] (swap! x2 #(conj % i)))
+(println "x1 => " @x1 ", x2 => " @x2)
+(println (= @x1 @x2))
+
+(def x1 (atom 0))
+(def x2 (atom 0))
+(for [i (range 10)] (cond true (swap! x1 inc)))
+(doseq [i (range 10)] (cond true (swap! x2 inc)))
+(println "x1 => " @x1 ", x2 => " @x2)
+(println (= @x1 @x2))
+
+;; str vs concat
+(println (str "first," "seconds," "third," "forth"))
+(println (concat "first," "seconds," "third," "forth"))
+
+(def words ["first," "seconds," "third," "forth"])
+(println (apply str words))
+(println (apply concat words))
+(concat [1,1.1] [2,2.1] [3,3.1] [4,4.5])
+
+(println 1#_(2)3)
+(println 1(comment 2)3)
+
+;; using ref
+(def r1 (ref 0))
+(dosync (ref-set r1 (inc @r1)))
+(println @r1)
+;;
+(def r1 (ref 0))
+(dosync (alter r1 inc))
+(println @r1)
+
+(int \n)
+(int \newline)
+
+;; function call
+(->> 1 identity (identity) (#(identity %)) ((fn[x]x)))
+((->> 1 identity (identity) (#(identity %)) (fn[x]x)) nil)
+((->> 1 identity (identity) #(identity %)) nil)
+
+;; BigDecimal = arbitrary precision decimal point floating point numbers
+(Math/pow 10.0000000000000000000001M 2)
+(.pow 10.0000000000000000000001M 2)
+(.pow 10.0000000000000000000001M 2M)
+(.add 10M 2M)
+(.subtract 10M 2M)
+(.divide 10.0000000000000000000001M 2M)
+(.multiply 10.0000000000000000000001M 2M)
+(.negate 10M)
+(.doubleValue 710.1M)
+(double 710.1M)
+;; (byte 128.1M)
+(byte 127.1M) 
+(byte -127.1M) 
+(short 710.1M)
+(int 710.1M)
+(long 710.1M)
+(BigDecimal. 1.1)     ;; has inaccuracy of double representation
+(BigDecimal. "1.1")   ;; exact
+(BigDecimal/valueOf 1.1)  ;; exact
+(.toString 1.1M)
+(str 1.1M)
+(.compareTo 1M 1M)
+(.compareTo 1.0 1.1)
+(.compareTo 1 1)
+(.compareTo 1N 1N)
+
+(zero? 0)
+(zero? 1)
+(map zero? [0 1])
+(map zero? [0N 1N])
+(map zero? [0M 1M])
+
+(neg? -1)
+(neg? 0)
+(neg? 1)
+(map neg? [-1 0 1])
+(map neg? [-1M 0M 1M])
+
+(pos? -1)
+(pos? 0)
+(pos? 1)
+(map pos? [-1 0 1])
+(map pos? [-1M 0M 1M])
+
+((juxt zero? neg? pos?) 0)
+(map (juxt zero? neg? pos?) [-1M 0M 1M])
+(flatten (map (juxt zero? neg? pos?) [-1M 0M 1M]))
+(frequencies (flatten (map (juxt zero? neg? pos?) [-1M 0M 1M])))
+((frequencies (flatten (map (juxt zero? neg? pos?) [-1M 0M 1M]))) true)
+((frequencies (flatten (map (juxt zero? neg? pos?) [-1M 0M 1M]))) false)
+
+(frequencies (map #(apply compare %) [[-1 -1],[-1 0],[-1 1],[0 -1],[0 0],[0 1],[1 -1],[1 0],[1 1]]))
+
+(filter #(= 3 (val %)) {:a 1, :b 2, :c 3, :d 4, :e 3, :f 5})
+(get (group-by val {:a 1, :b 2, :c 3, :d 4, :e 3, :f 5}) 3)
+
+(map #(vector (key %) (val %)) {:a 1, :b 2, :c 3, :d 4, :e 3, :f 5})  ;; one by one
+(into '() {:a 1, :b 2, :c 3, :d 4, :e 3, :f 5})   ;; pushing at front
+(into [] {:a 1, :b 2, :c 3, :d 4, :e 3, :f 5})
+(list (into [] {:a 1, :b 2, :c 3, :d 4, :e 3, :f 5}))   ;; wraps vector into list ([...])
+(apply list (into [] {:a 1, :b 2, :c 3, :d 4, :e 3, :f 5}))   ;; outer vector --> list
+
+;; composition
+((comp (partial + 1) (partial * 10)) 1)
+((comp (fn[x](inc x)) (fn[x](* 10 x))) 1)
+((comp (fn[[x _]]x) (fn[x](vector x x))) 1)
+((comp (fn[x](vector x x)) (fn[[x _]]x)) [1 1])
+
+(update {:a 1, :b 2} :a inc)
+(update {:a 1, :b 2} :a (fn[x y](+ x y)) 10)
+(update {:a 1, :b 2} :a (fn[x y z](+ x y z)) 10 20)
+
+; using atoms
+(def a1 (atom 1))
+(reset! a1 2)
+(swap! a1 inc)
+
+;; using refs
+(def r1 (ref 1))
+(def r2 (ref 1))
+(def r3 (ref 1))
+(def r4 (ref 1))
+(dosync (alter r1 inc) (alter r2 (partial + 1)) (alter r3 (fn[x](+ 1 x))) (alter r4 #(+ 1 %)))
+(println @r1 @r2 @r3 @r4)
+;; with exception
+(def r1 (ref 1))
+(def r2 (ref 1))
+(def r3 (ref 1))
+(def r4 (ref 1))
+(dosync (alter r1 inc) (alter r2 (partial + 1)) (alter r3 (fn[x](+ 1 x))) (alter r4 #(+ 1 %)) (throw (Exception.)))
+(println @r1 @r2 @r3 @r4)
+;;
+;; dosync has no effect on atoms, no roll-back with exception
+(def r1 (atom 1))
+(def r2 (atom 1))
+(def r3 (atom 1))
+(def r4 (atom 1))
+(dosync (swap! r1 inc) (swap! r2 (partial + 1)) (swap! r3 (fn[x](+ 1 x))) (swap! r4 #(+ 1 %)) (throw (Exception.)))
+(println @r1 @r2 @r3 @r4)
+
+(require '[clojure.string :as s :refer [split] :rename {reverse rev}])
+;; no rev here
+(require '[clojure.string :as s :refer [split, reverse] :rename {reverse rev}])
+;; now rev available
+
+(clojure.core/replace {"a" "b"} ["a" "b" "c"])
+(clojure.core/replace {1 2} [1 2 3])
+
+(assoc {} :a 1)
+(assoc (assoc {} :a 1) :a 2)
+;;
+(dissoc {:a 1, :b 2, :c 3, :d 4})
+(dissoc {:a 1, :b 2, :c 3, :d 4} :a)
+(dissoc {:a 1, :b 2, :c 3, :d 4} :a :b)
+(dissoc {:a 1, :b 2, :c 3, :d 4} :a :b :c)
+(dissoc {:a 1, :b 2, :c 3, :d 4} :a :b :c :d)
+;;
+(update {:a 1} :a (fn[_]2))
+(update {:a 1} :a (fn[_ _]2) :unused)
+(update {:a 1} :a inc)
+
+;; transient, persistent
+(def tv (transient []))
+(conj! tv 1)
+(conj! tv 2)
+(conj! tv 3)
+(conj! tv 4)
+(count tv)
+(def pv (persistent! tv))
+;; after persistent no changed possible
+;; (conj! tv 5)
+
+;; sorted map
+(sorted-map)
+(sorted-map :a 1)
+(type (sorted-map))   ;; persistent tree map
+(type {})             ;; persistent array map
+(sort (sorted-map :d 4 :b 2 :c 3 :a 1))
+(sort {:d 4 :b 2 :c 3 :a 1})
+
+;; sorted set
+(sorted-set)
+(sorted-set 1 2 3 4)
+(type (sorted-set))   ;; persistent tree set
+(type #{})            ;; persistent hash set
+(sort (sorted-set 4 2 3 1))
+(sort #{4 2 3 1})
+
+;; java.io
+(require '[clojure.java.io :as io])
+(def data (io/file "data.txt"))
+
+(set! *warn-on-reflection* true)
+(.toString (long 1))
+(.toString (Long. 1))
 
 
 
