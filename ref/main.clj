@@ -111,6 +111,10 @@
 ;; (assoc v1 5 200)  ;; error, when index > append index
 
 (conj v1 300)   ;; append
+(conj [] 1)
+(conj [] 1 2)
+(conj [] 1 2 3)
+(conj [] 1 2 3 4)
 
 (update v1 0 (fn[_]0))
 (update-in v1 [0] (fn[_]0))
@@ -1057,7 +1061,10 @@
 
 (assoc {} :a 1)
 (assoc (assoc {} :a 1) :a 2)
-;;
+(assoc {} :a 1 :b 2)
+(dissoc (assoc {} :a 1 :b 2) :a :b)
+(dissoc (assoc {} :a 1 :b 2) :a :b :c)
+
 (dissoc {:a 1, :b 2, :c 3, :d 4})
 (dissoc {:a 1, :b 2, :c 3, :d 4} :a)
 (dissoc {:a 1, :b 2, :c 3, :d 4} :a :b)
@@ -1067,6 +1074,11 @@
 (update {:a 1} :a (fn[_]2))
 (update {:a 1} :a (fn[_ _]2) :unused)
 (update {:a 1} :a inc)
+;; the deepest key can be created
+(update {} :a (fn[_]1))
+(update {} :a (fn[_ x]x) 1)
+;; (update-in {{}} [:a :b] (fn[_]1))
+(update-in {:a {}} [:a :b] (fn[_]1))
 
 ;; transient, persistent
 (def tv (transient []))
@@ -1095,6 +1107,17 @@
 (sort (sorted-set 4 2 3 1))
 (sort #{4 2 3 1})
 
+(for[i #{1 2 3 4}] i)
+(for[i (hash-set 1 2 3 4)] i)
+(for[i (sorted-set 1 2 3 4)] i)
+
+;; mixed types
+(for[kv (hash-map 1 2 3 4 "a" "A")]kv)
+(for[[k v] (hash-map 1 2 3 4 "a" "A")]k)
+;; no mixed types
+(for[kv (sorted-map 1 2 3 4)]kv)
+(for[kv (sorted-map "a" "A" "b" "B")]kv)
+
 ;; java.io
 (require '[clojure.java.io :as io])
 (def data (io/file "data.txt"))
@@ -1103,5 +1126,75 @@
 (.toString (long 1))
 (.toString (Long. 1))
 
+(def a (atom []))
+(dotimes [_ 10] (swap! a #(conj % (rand))))
+(print @a)
 
+(def a (atom {}))
+(def a (atom (sorted-map)))
+(dotimes [k 10] (swap! a #(assoc % k (rand))))
+(print@a)
+
+(type *out*)
+(type *in*)
+(.write *out* 49)
+(.write *out* "1")
+
+;; using unter WSL
+;; cd /mnt/c && mkdir clojure
+;; cd clojure && touch tools.clj
+;; edit tools.clj
+;; start clojure with
+;; clojure -cp "/mnt/c/clojure"
+;; (require 'tools)
+;; (tools/hexify 100)
+;; (require '[tools :as t :refer [hex] :rename {hex hexify}])
+;; (require 'tools :reload)
+
+;; usually the bindings remain after the require
+;; changed functions will not be updated => add :reload
+(require 'clojure.string :reload)
+
+(def public-keyword-a :a)
+(def local-keyword-a ::a)
+
+;; (partition 3 0 (range 10))
+(take 10 (partition 3 0 (range 10)))
+(map (juxt inc dec) [1 2 3 4])
+(map (juxt (fn[[x y]](+ x y)) (fn[[x y]](* x y))) (partition 2 1 [1 2 3 4]))
+
+(defstruct foo :a :b)
+(def f1 (struct foo 1 2))
+(:a f1)
+
+(defrecord bar [a b])
+(def b1 (bar. 1 2))
+(:a b1)
+
+;; defonce
+;; (def show nil)
+(defmulti show identity)
+(defmethod show 1 [x] "one")
+(defmethod show 2 [x] (println "two"))
+(defmethod show :default [x] (printf "something else %s\n" x))
+(show 1)
+(show 2)
+(show 3)
+
+(defmulti show (fn[x] (if (and (> x 0) (< x 100)) x 0)) :default 0)
+(defmethod show 1 [x] "one")
+(defmethod show 2 [x] (println "two"))
+(defmethod show 3 [x] 3)
+(defmethod show 0 [x] (printf "outside the range or not implemented %s\n" x))
+(show 1)
+(show 2)
+(show 3)
+(show 101)
+
+(defmulti show :tag)
+(defmethod show 1 [m] (:name m))
+(defmethod show :default [m] m)
+(show {:tag 1, :name "foo"})
+(show {:tag 2})
+(show {})
 
