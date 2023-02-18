@@ -1198,3 +1198,26 @@
 (show {:tag 2})
 (show {})
 
+(try (catch Exception e) (finally))
+(try (catch IndexOutOfBoundsException e) (catch Exception e) (finally))
+(try (catch ArithmeticException e) (catch IndexOutOfBoundsException e) (catch Exception e) (finally))
+(try (catch ArithmeticException e) (catch IndexOutOfBoundsException e) (catch Exception e) (finally (printf "done\n")))
+(try (/ 1 0) (catch ArithmeticException e 1) (catch IndexOutOfBoundsException e 2) (catch Exception e 3) (finally (printf "done\n")))
+(try (nth [] 0) (/ 1 0) (catch ArithmeticException e 1) (catch IndexOutOfBoundsException e 2) (catch Exception e 3) (finally (printf "done\n")))
+(try (+ 1 "2") (nth [] 0) (/ 1 0) (catch ArithmeticException e 1) (catch IndexOutOfBoundsException e 2) (catch ClassCastException e 3) (catch Exception e 0) (finally (printf "done\n")))
+
+(try (throw (Exception. "here")) (slurp "no_file") #_(NoSuchClass.) ((fn[_])) (+ 1 "2") (nth [] 0) (/ 1 0) 
+     (catch ArithmeticException e 1) 
+     (catch IndexOutOfBoundsException e 2) 
+     (catch ClassCastException e 3) 
+     (catch clojure.lang.ArityException e 4) 
+     (catch IllegalArgumentException e 5)
+     (catch java.io.FileNotFoundException e 6)
+     (catch Exception e 0)
+     (finally (printf "done\n")))
+
+(def f (constantly 1))
+(apply f nil)
+(apply f '())
+(apply f [])
+
