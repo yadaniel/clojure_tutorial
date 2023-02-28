@@ -546,6 +546,9 @@
 (.toLowerCase "FOO")
 (.toUpperCase "foo")
 
+(clojure.string/lower-case "FOO")
+(clojure.string/upper-case "foo")
+
 ;; forward declaration => unbound
 (def forward_x)
 (intern 'user 'forward_y)
@@ -850,7 +853,31 @@
 
 ;; contains? is about key or index
 (contains? {:foo 1} :foo)
+(contains? [1] 0)
+(contains? "foo" 0)
+(contains? #{0} 0)
+
+;; java contains method is about value
+(.contains [1] 0)
+(.contains [1] 1)
+(.contains "foo" "o")
+
+;; python has any and all
+;; any([]) => False
+;; all([]) => True
+;; any -> some
+;; all -> every?
+
 (every? {:foo 1} [:foo])
+(every? (fn[x](>= x 10)) [])
+(every? (fn[x](>= x 10)) (range 9 100))
+(every? (fn[x](>= x 10)) (range 10 100))
+(every? #{1,2,3,4,5} [1,2,3,4,1,2,3,4])
+(every? #{1,2,3,4,5} [5,6,7])
+
+;; some returns nil, true => no ?
+(some (fn[x](>= x 10)) [1,2,3,4])
+(some (fn[x](>= x 10)) [1,2,3,4,10])
 
 ;; some to check if element in container
 ;; partial can be used even when function has one parameter
@@ -1216,8 +1243,95 @@
      (catch Exception e 0)
      (finally (printf "done\n")))
 
+(try (/ 1 0) (catch Exception e))
+(try (/ 1 0) (catch Exception e nil))
+(try (/ 1 0) (catch Exception e 0))
+(try (/ 1 0) (catch Exception e "divided by zero"))
+
 (def f (constantly 1))
 (apply f nil)
 (apply f '())
 (apply f [])
+
+;; simple alternative to cond and condp
+(case 0, 1 [], 2 '(), 3 {}, 4 #{}, 0 nil)
+(defn f[v] (case v, 1 [], 2 '(), 3 {}, 4 #{}, 0 nil))
+
+(str/join ["a" "b" "c" "d"])
+(apply str/join [["a" "b" "c" "d"]])
+
+(str/join "," ["a" "b" "c" "d"])
+(apply str/join ["," ["a" "b" "c" "d"]])
+
+(take-nth 2 (range 100))
+
+(empty [1, 2, 3, 4, 5, 6])
+(empty (list 1, 2, 3, 4, 5, 6))
+(empty {:one 1, :two 2})
+(empty #{1,2})
+
+(def xs [:one, :two, :three, :four])
+(def ys [1, 2, 3, 4])
+(partition 2 (interleave xs ys))
+(map (fn[x y] [x y]) xs ys)
+
+(case (read) 0 "null" 1 "eins")
+(take 2 (repeat (case (read) 0 "null" 1 "eins")))
+(for [_ (range 2)] (case (read) 0 "null" 1 "eins"))
+
+(if '() 1 2)
+(if [] 1 2)
+(if {} 1 2)
+(if #{} 1 2)
+(if "" 1 2)
+(if 0 1 2)
+(defn f[xs] (if-let [it xs] [(reduce + it) (reduce * it)]))
+
+;; when
+(when true)
+(when-not false)
+
+(when true (println "1") (println "2"))
+(if true (do (println "1") (println "2")))
+
+(require '[clojure.walk : as w])
+(w/walk #(nth % 0) #(apply max %) [[0, 1, 2, 3] [4, 5, 6, 7] [8, 9, 10] [11]])
+(w/walk count #(apply max %) [[0, 1, 2, 3] [4, 5, 6, 7] [8, 9, 10] [11]])
+
+;; prewalk iterates over outer elements first => 1, [2.0, 2.1], 2.0, 2.1 ...
+;; postwalk iterates over outer elements last => 1, 2.0, 2.1, [2.0, 2.1] ...
+(def nested_list [1, [2.0, 2.1], 3, 4])
+(w/prewalk (fn[x] (println x) (if true x 0)) nested_list)
+(w/postwalk (fn[x] (println x) (if true x 0)) nested_list)
+(count (flatten nested_list))
+
+;; Illegal state exception -> cannot dynamically bind non-dynamic var
+;; (def x 1)
+;; (binding [x 2])
+
+(def ^{:dynamic true} x 1)
+(println "before x => " x)
+(binding [x 2] (println "inside x => " x))
+(println "after x => " x)
+
+(def ^{:private true} x "doc string" 1)
+(def ^:private x "doc string" 1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
