@@ -1317,7 +1317,17 @@
 (def ^{:private true} x "doc string" 1)
 (def ^:private x "doc string" 1)
 
+(defn ^{} f "docstring" ([x] 1) ([x & xs] 2))
 
+;; side-effect, then return value
+(defn p[x] (printf "%s\n" x) x)
+(def lz (for[i (range 10)] (p i)))
+(take 1 lz)   ;; side-effects of all 10, returned only the first
+(take 1 lz)   ;; no side-effects, returned only the first
+;; lazy sequence evaluted in blocks
+(def lz (for[i (range 100)] (p i)))
+(take 1 lz)   ;; side-effects of 32 (0..31), returned only the first
+(take 1 lz)   ;; no side-effects, returned only the first
 
 
 
