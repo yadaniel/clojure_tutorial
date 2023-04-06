@@ -1329,17 +1329,97 @@
 (take 1 lz)   ;; side-effects of 32 (0..31), returned only the first
 (take 1 lz)   ;; no side-effects, returned only the first
 
+;; python 
+;; round(1/3, 5)
+;; round(0.12345_499, 5)
+;; round(0.12345_500, 5)
+;; round(0.12345_501, 5)
+;; with-precision only used with BigDecimal
+(with-precision 5 (/ 1 3M))
+(with-precision 5 (/ 4 3M))
+(with-precision 5 :rounding FLOOR (/ 1 3M))
+(with-precision 5 :rounding CEILING (/ 1 3M))
+(with-precision 5 :rounding HALF-UP (/ 1 3M))
+(with-precision 5 :rounding HALF-DOWN (/ 1 3M))
+(with-precision 5 :rounding HALF-EVEN (/ 1 3M))
+(with-precision 5 :rounding UP (/ 1 3M))
+(with-precision 5 :rounding DOWN (/ 1 3M))
+(with-precision 5 :rounding UNNECESSARY 0.1234567)
 
+;; maybe bug, v3 and v4 work
+(defn with-prec-v1[n x] (double (with-precision n (* 1M x))))
+(with-prec-v1 4 0.12345)
+(defn with-prec-v2[n x] (double (with-precision n (BigDecimal. x))))
+(with-prec-v2 4 0.12345)
+(defn with-prec-v3[n x] (double (with-precision n (* 1 (BigDecimal. x)))))
+(with-prec-v3 4 0.12345)
+(defn with-prec-v4[n x] (double (with-precision n (* 1M (BigDecimal. x)))))
+(with-prec-v4 4 0.12345)
 
+(with-precision 4 1.23456)    ;; 1.23456
+(with-precision 4 1.23456M)   ;; 1.23456M
+(with-precision 4 (BigDecimal. 1.23456))  ;; 1.2345600000000001017497197608463466167449951171875M
+(with-precision 4 (* 1 (BigDecimal. 1.23456)))  ;; 1.235M
+(with-precision 4 (+ 0 (BigDecimal. 1.23456)))  ;; 1.235M
 
+;; in namespace user
+(ns other)
+(defn f "doc of f" [n] (* 2 n))
+;; (doc f)    ;; will not work
+(clojure.repl/doc f)
+;; (dir other)    ;; will not work
+(clojure.repl/dir other)
 
+(defn f "without cache, with side effect" [n] (let [r (* 2 n)] (println "f called with " n " returns " r) r))
+(def f' "cached version of f, side effect takes place once" (memoize f))
+(f' 100)
+(f' 100)
 
+(defn sup [n] (let [s (atom 0)] (dotimes [i n] (swap! s (partial + i))) @s))
+(sup 10)
+(apply + (range 10))
+(def N 1000000)
+(time (sup N))
+(time (apply + (range N)))
 
+(require '[clojure.java.io :as io])
+(.exists (io/as-file ""))
+(.exists (io/as-file "."))
+(.exists (io/as-file ".."))
+(.exists (io/as-file "..."))
 
+;; eval
+(def s "(+ 1 2)")
+(eval s)  ;; does not work
+(eval (read-string s))  ;; works
+;;
+(def s '(+ 1 2))
+(eval s)  ;; works
+;; echo "1 2 3 4" | clojure -e '(eval (read-string (format "(apply + [%s])" (read-line))))'
 
+;; reading from command line
+(read)
+(read-line)
+(read-string (read-line))   ;; same as (read)
+(slurp *in*)
 
+(Long. "0")
+(Long/parseLong "0")
+(Long/parseLong "1111" 2)
+(Long/decode "1111" 2)
+(Long/decode "0x10")
+(Long/toBinaryString 15)
 
-
+;; how to split any sequence
+(partition 3 (range 10))
+(partition-all 3 (range 10))
+(defn p[xs n] (map #(count %) (partition n xs)))
+(defn p-all[xs n] (map #(count %) (partition-all n xs)))
+;; str sequence = list of chars
+(seq "foobar")
+(apply str (seq "foobar"))
+(partition 3 "foobar")
+(map #(apply str %) (partition 3 "foobar"))
 
 
 
