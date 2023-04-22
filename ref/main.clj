@@ -1421,7 +1421,28 @@
 (partition 3 "foobar")
 (map #(apply str %) (partition 3 "foobar"))
 
+;; keep-indexed takes f and sequence
+;; (f index value)
+(defn findall[xs x] (keep-indexed #(if (= %2 x) %1) "abcdefooebarefoobar"))
+(defn findall'[xs x] (keep-indexed #(if (= %2 x) %1 nil) "abcdefooebarefoobar"))   ;; explicit else nil
+(defn findall''[xs x] (keep-indexed #(if (= %2 x) %1 false) "abcdefooebarefoobar"))   ;; false is not nil => does not work
+(println "findall => " (findall "abcdefooebarefoobar" \e))
 
+;; python version
+;; def findall(xs,x): return [i for i,x_ in enumerate(xs) if x_==x]
 
+;; keep, filter
+(keep #(if (= % 1) %) [1 2 3 4 5 1 2 3 4 5])
+(filter #(= % 1) [1 2 3 4 5 1 2 3 4 5])
+;; keep can do more than filter
+(def c (atom 0))
+(keep #(if (= % 1) (swap! c inc)) [1 2 3 4 5 1 2 3 4 5])
+(def c (atom 0))
+(keep #(if (= % 1) (swap! c (fn[v] (+ @c %)))) [1 2 3 4 5 1 2 3 4 5])
+(keep #(if (> % 5) [% (. System currentTimeMillis)]) [1 2 3 4 5 1 2 3 4 5 6 7])
+
+(dir user)
+(dir clojure.core)
+(dir clojure.string)
 
 
