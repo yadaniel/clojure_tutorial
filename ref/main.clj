@@ -159,6 +159,7 @@
 ;; reader tag
 #'v1
 (var v1)
+(type #'v1)   ;; Var
 
 (= (symbol "a") 'a)
 
@@ -1444,5 +1445,48 @@
 (dir user)
 (dir clojure.core)
 (dir clojure.string)
+(dir clojure.pprint)
+
+(map char "foo")
+(map int "foo")
+(map long "foo")
+
+(def ts #inst "2023")
+(def id #uuid "3b8a31ed-fd89-4f1b-a00f-42e3d60cf5ce")
+
+(type 1)    ;; returns the :type metadata of var or its class
+(class 1)   ;; returns the class of var
+(clojure.core/type 1)    ;; returns the :type metadata of var or its class
+(clojure.core/class 1)   ;; returns the class of var
+
+(def ^{:type 'enum} x 1)
+(meta (var x))
+
+(def x (with-meta [1] {:type :foo-type}))
+(meta x)
+(type x)
+(class x)
+
+*data-readers*
+(meta (var *data-readers*))
+
+(def v)     ;; unbound
+(meta #'v)
+(def v 1)   ;; bound to 1
+(meta #'v)
+(def v)     ;; remains bound to 1
+
+(def t (Thread. (fn[](println 1))))
+(.start t)
+
+(def r (atom (Random. 0)))
+(defn random-1000[] (mod (Math/abs (.nextInt @r)) 5000))
+
+(def threads (atom []))
+(dotimes [i 10] (swap! threads #(conj % (Thread. (fn[] (do (Thread/sleep (random-1000)) (println i)))))))
+(doseq [t @threads] (.start t))
+(doseq [t @threads] (.join t))
+
+
 
 
