@@ -1444,6 +1444,7 @@
 
 (dir user)
 (dir clojure.core)
+(dir clojure.repl)
 (dir clojure.string)
 (dir clojure.pprint)
 
@@ -1487,6 +1488,82 @@
 (doseq [t @threads] (.start t))
 (doseq [t @threads] (.join t))
 
+(partition-by (fn[_]false) (range 100))
+(partition-by (fn[_]true) (range 100))
+(partition-by (fn[n](<= n 50)) (range 99))
+(group-by (fn[n](<= n 50)) (range 99))  ;; more 
+;; [1 2 3 4 [10 20 30 40 [100 200 300 400] 50 60 70 80] 5 6 7 8] => [4 [ 4 [ 4] 4 ] 4]
+(apply count [[1 2 3 4]])
+(count [1 2 3 4])
+
+(import java.util.Random)
+(def r (Random.))
+(.nextInt r)
+(require 'clojure.reflect)
+(clojure.reflect/reflect r)
+(keys (clojure.reflect/reflect r))  ;; [:bases, :flags, :members]
+(:bases (clojure.reflect/reflect r))    ;; hash-set
+(:flags (clojure.reflect/reflect r))    ;; hash-set
+(:members (clojure.reflect/reflect r))  ;; hash-set
+(for [m (:members (clojure.reflect/reflect r))] (println m))
+(require 'clojure.pprint)
+(for [m (:members (clojure.reflect/reflect r))] (clojure.pprint/pprint m))
+(clojure.pprint/pprint (:members (clojure.reflect/reflect r)))
+;;
+(def m (:members (clojure.reflect/reflect r)))
+(map :name m)
+(map :name (filter #(= #{:public} (:flags %)) m))
+
+(.limit (.doubles r 10) 4)
+(.forEach (.limit (.doubles r 10) 4) #(print %))
+
+;; (defmulti ptype type)
+(defmulti ptype type :default nil)
+;; (defmulti ptype type :default 0)
+(defmethod ptype Long [x] (inc x))
+(defmethod ptype Character [x] (int x))
+(defmethod ptype String [x] (clojure.string/upper-case x))
+(defmethod ptype clojure.lang.PersistentList [x] (count x))
+(defmethod ptype clojure.lang.PersistentList$EmptyList [x] 0)
+(defmethod ptype clojure.lang.PersistentVector [x] (count x))
+(defmethod ptype clojure.lang.PersistentArrayMap [x] (keys x))
+(defmethod ptype nil [_] nil)
+;; (defmethod ptype nil [_] "using default nil")
+;; (defmethod ptype :default [_] "using default")
+;; (defmethod ptype 0 [_] "using default 0")
+(ptype 1)
+(ptype "foo")
+(ptype '())
+(ptype '(1 2 3 4))
+(ptype [1 2 3 4])
+(ptype {:a 1, :b 2, :c 2, :d 4})
+
+(vector 1 2 3 4)
+(vec (range 1 5))
+(vector)
+(vec nil)
+(vec ())
+(vec '())
+(vec [])
+(into (vector) '())
+(into (vec nil) '())
+
+(defrecord E)
+(defrecord W [a b c d])
+(def w1 (W. 1 2 3 4))
+(def w1' (with-meta w1 {:tag "record"}))
+(meta w1')
+(def ^{:tag "record"} w2 (W. 1 2 3 4))
+(meta w2)
+(meta (var w2))
+
+(Class/forName "java.lang.Byte")
+(Class/forName "clojure.lang.PersistentHashMap")
+(Class/forName "[Ljava.lang.Byte;")
+(def B (Class/forName "java.lang.Byte"))
+(def BA (Class/forName "[Ljava.lang.Byte;"))
+(def M (Class/forName "clojure.lang.PersistentHashMap"))
+[B BA M]
 
 
 
