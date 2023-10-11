@@ -257,11 +257,11 @@
 (def a (atom 0))
 (def ag (agent 0))
 (def r (ref 0))
-(do 
+(do
   (println "atom => " @a)
   (println "agent => " @ag)
   (println "ref => " @r))
-(do 
+(do
   (println "atom => " (deref a))
   (println "agent => " (deref ag))
   (println "ref => " (deref r)))
@@ -361,21 +361,21 @@
 (take 20 (drop 20 (range)))
 
 ;; example of reducing function
-(transduce (comp (filter odd?) (take 20)) 
+(transduce (comp (filter odd?) (take 20))
   (fn ([acc x] (+ acc x))
       ([x] x)
       ([] 0))
   0
   (range))
 
-(transduce (comp (filter odd?) (take 20)) 
+(transduce (comp (filter odd?) (take 20))
   (fn ([acc x] (conj acc x))
       ([x] x)
       ([] 0))
   []
   (range))
 
-(transduce (comp (filter odd?) (take 20)) 
+(transduce (comp (filter odd?) (take 20))
   (fn ([acc x] (conj acc x))
       ([x] [x])
       ([] []))
@@ -438,7 +438,7 @@
 ;; foo => Symbol
 ;; :foo => Keyword
 ;; "foo" => String
-(do 
+(do
   (print "enter: ")
   (flush)
   (def q (read)))
@@ -612,7 +612,7 @@
 (= (partition 2 (range 10)) (partition 2 2 (range 10)))
 (= (flatten (partition 1 (range 10))) (range 10))
 (partition 1 (range 10))    ;; list of lists of one element
-(partition 3 (range 10))  
+(partition 3 (range 10))
 
 ;; flatten, apply concat
 (= (apply concat [[1] [2]]) (flatten [[1] [2]]))
@@ -740,9 +740,9 @@
 
 (while (< (.nextInt r) 1000000) (pprint "here"))
 
-(let [r (doto (Random.) (.setSeed 0)), v (atom 0)] 
-  (while (do 
-           (reset! v (mod (.nextInt r) 100)) 
+(let [r (doto (Random.) (.setSeed 0)), v (atom 0)]
+  (while (do
+           (reset! v (mod (.nextInt r) 100))
            (< @v 80))
     (pprint (str "value was " @v))))
 
@@ -808,8 +808,8 @@
 ;; conversion map vector
 (into {} (into [] {:a 1, :b 2}))
 
-((juxt (fn[x]x) (fn[x](* 2 x)) (fn[x](* 3 x)) (fn[x](* x 4))) 1) 
-(def f (juxt (fn[x]x) (fn[x](* 2 x)) (fn[x](* 3 x)) (fn[x](* x 4)))) 
+((juxt (fn[x]x) (fn[x](* 2 x)) (fn[x](* 3 x)) (fn[x](* x 4))) 1)
+(def f (juxt (fn[x]x) (fn[x](* 2 x)) (fn[x](* 3 x)) (fn[x](* x 4))))
 (def v (map f (range 10)))
 (map (fn[[x _ _ _]] x) v)
 
@@ -903,20 +903,20 @@
 (def xs [\A 1 2 3 4 \B 5 6 \C 7 \D 8 \E \F 0 9 \S])
 ;; using reduce
 (def xxs (atom []))
-(reduce (fn[acc x] 
-          (if (char? x) 
+(reduce (fn[acc x]
+          (if (char? x)
             (do (reset! xxs (cons acc @xxs)) [x])   ;; acc into xxs when new char encountered, stop char needed at end
             (cons x acc)))    ;; include into acc
-        [] 
+        []
         xs)
 (pprint @xxs)
 
 ;; using doseq
 (def xxs (atom []))
 (def acc (atom []))
-(doseq [x xs] 
-  (if (char? x) 
-    (do (reset! xxs (conj @xxs @acc)) (reset! acc [x])) 
+(doseq [x xs]
+  (if (char? x)
+    (do (reset! xxs (conj @xxs @acc)) (reset! acc [x]))
     (reset! acc (conj @acc x))))
 (pprint @xxs)
 
@@ -990,8 +990,8 @@
 (.doubleValue 710.1M)
 (double 710.1M)
 ;; (byte 128.1M)
-(byte 127.1M) 
-(byte -127.1M) 
+(byte 127.1M)
+(byte -127.1M)
 (short 710.1M)
 (int 710.1M)
 (long 710.1M)
@@ -1234,11 +1234,11 @@
 (try (nth [] 0) (/ 1 0) (catch ArithmeticException e 1) (catch IndexOutOfBoundsException e 2) (catch Exception e 3) (finally (printf "done\n")))
 (try (+ 1 "2") (nth [] 0) (/ 1 0) (catch ArithmeticException e 1) (catch IndexOutOfBoundsException e 2) (catch ClassCastException e 3) (catch Exception e 0) (finally (printf "done\n")))
 
-(try (throw (Exception. "here")) (slurp "no_file") #_(NoSuchClass.) ((fn[_])) (+ 1 "2") (nth [] 0) (/ 1 0) 
-     (catch ArithmeticException e 1) 
-     (catch IndexOutOfBoundsException e 2) 
-     (catch ClassCastException e 3) 
-     (catch clojure.lang.ArityException e 4) 
+(try (throw (Exception. "here")) (slurp "no_file") #_(NoSuchClass.) ((fn[_])) (+ 1 "2") (nth [] 0) (/ 1 0)
+     (catch ArithmeticException e 1)
+     (catch IndexOutOfBoundsException e 2)
+     (catch ClassCastException e 3)
+     (catch clojure.lang.ArityException e 4)
      (catch IllegalArgumentException e 5)
      (catch java.io.FileNotFoundException e 6)
      (catch Exception e 0)
@@ -1330,7 +1330,7 @@
 (take 1 lz)   ;; side-effects of 32 (0..31), returned only the first
 (take 1 lz)   ;; no side-effects, returned only the first
 
-;; python 
+;; python
 ;; round(1/3, 5)
 ;; round(0.12345_499, 5)
 ;; round(0.12345_500, 5)
@@ -1491,7 +1491,7 @@
 (partition-by (fn[_]false) (range 100))
 (partition-by (fn[_]true) (range 100))
 (partition-by (fn[n](<= n 50)) (range 99))
-(group-by (fn[n](<= n 50)) (range 99))  ;; more 
+(group-by (fn[n](<= n 50)) (range 99))  ;; more
 ;; [1 2 3 4 [10 20 30 40 [100 200 300 400] 50 60 70 80] 5 6 7 8] => [4 [ 4 [ 4] 4 ] 4]
 (apply count [[1 2 3 4]])
 (count [1 2 3 4])
@@ -1565,5 +1565,88 @@
 (def M (Class/forName "clojure.lang.PersistentHashMap"))
 [B BA M]
 
+(defprotocol P (self[x]) (inc-with-limit[x n]))
+(extend-protocol P java.lang.Long (self[x]x) (inc-with-limit[x n] (min (inc x) n)))
+(self 10)
+(inc-with-limit 9 10)
+(inc-with-limit 10 10)
+;; (self (int 0))
+;; (self (Integer. "0"))
+(= (byte 0) (long 0))
+(= (byte 0) 0N)
+(= (byte 0) 0M)
+(= (byte 0) (double 0))
+
+(cond false 1, false 2, false 3, false 4, true :other)
+(condp (fn[x y] (println "x=" x " y=" y) (= x y)) :param :x 0, 1 2, 3 4, 5 6, 7 8 :other)
+
+(if (#{1 2 3 4} 0) :if :else)
+(get #{1 2 3 4} 0)
+(get #{1 2 3 4} 0 :not-found)
+
+(let [x0 0, [x1] (list 1), [x2 x3] (list 2 3)] x0)
+(let [x0 0, [x1] (list 1), [x2 x3] (list 2 3)] x1)
+(let [x0 0, [x1] (list 1), [x2 x3] (list 2 3)] x2)
+(let [x0 0, [x1] (list 1), [x2 x3] (list 2 3)] x3)
+
+;; special symbols
+(* ##NaN 0)
+(+ ##Inf 1)
+(/ ##Inf ##-Inf)
+;; (defmacro current-namespace[] *ns*)
+(defmacro current-namespace[] (str *ns*))
+(def cur-namespace 'user)
+(ns a)
+(print *ns*)
+(def a-k ::keyword)
+(ns b)
+(print *ns*)
+(def b-k ::keyword)
+;; (ns user)
+;; (ns current-namespace)
+;; (ns (user/current-namespace))
+;; (ns user/cur-namespace)
+;; (in-ns 'user)
+(in-ns user/cur-namespace)
+(print *ns*)
+
+clojure.core/*ns*
+
+(map (fn[f](f 1 1)) [+ - * /])
+
+(import java.lang.Thread)
+(def t1 (Thread. (fn[](println "a")(Thread/sleep 1000)(println "b"))))
+(.start t1)
+(def f1 (future (println "\na")
+                (Thread/sleep 10000)
+                (println "b\n")
+                1))
+(println @f1)
+
+(-> 1)
+(->> 1)
+(some-> 1)
+(some->> 1)
+(as-> [1 2 3 4] xs (map (fn[x](* 2 x)) xs))
+
+;; complementary to map, map same function for different values in container
+;; cond->, cond->>, different functions for same container
+(defn describe-it[n]
+  (cond-> []
+    (> n 100) (conj ">100")
+    (= Double (type n)) (conj "double")
+    (= Float (type n)) (conj "float")))
+
+;;         v---------------------------------------------
+;;           v---------------------v  |        |        |
+(condp (fn[x y](println x)(= x y)) 10 0 "null" 1 "eins" 10 "zehn")
+
+(cond-> [] true (conj 1)
+           false (conj -1)
+           true (conj 2)
+           false (conj 0)
+           true (conj 3)
+           false (conj 1)
+           true (conj 4))
 
 
