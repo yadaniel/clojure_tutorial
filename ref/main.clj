@@ -1753,5 +1753,11 @@ clojure.core/*ns*
        m'-size (count m')]
       (if (= m'-size m-size) [true m'] [false m'])))
 
+;; in clojure only "false" values are => nil, false
+(and 0 [] {} #{} '() "")  ;; "true", last "true" value returned => ""
+(and 0 [] {} nil #{} '() "")  ;; "false", first "false" value returned => nil
+(and 0 [] false {} nil #{} '() "")  ;; "false", first "false" value returned => false
+(or nil false 1 "")   ;; "true", first "true" value returned => 1
+(or nil false "" 1)   ;; "true", first "true" value returned => ""
 
 
