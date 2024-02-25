@@ -751,6 +751,8 @@
 (let [ms #(.millis (Clock/systemUTC)), now (ms), stop (+ 60000 now)]
   (while (< (ms) stop) (do (Thread/sleep 100) (println "."))))
 
+(prn (System/nanoTime))
+
 (map #(vec %) [[0 1 2] [3 4 5] [6 7 8]])
 (map #(identity %) [[0 1 2] [3 4 5] [6 7 8]])
 ;; (map #(vector 1 2 3) [[0 1 2] [3 4 5] [6 7 8]])  ;; arity 0 => error because arity 1 expected
@@ -1295,7 +1297,7 @@
 (when true (println "1") (println "2"))
 (if true (do (println "1") (println "2")))
 
-(require '[clojure.walk : as w])
+(require '[clojure.walk :as w])
 (w/walk #(nth % 0) #(apply max %) [[0, 1, 2, 3] [4, 5, 6, 7] [8, 9, 10] [11]])
 (w/walk count #(apply max %) [[0, 1, 2, 3] [4, 5, 6, 7] [8, 9, 10] [11]])
 
@@ -1648,5 +1650,108 @@ clojure.core/*ns*
            true (conj 3)
            false (conj 1)
            true (conj 4))
+
+(def ct (Thread/currentThread))
+(def t (Thread. (fn[](prn "a")(Thread/sleep 1000)(prn "b"))))
+(def t0 (System/currentTimeMillis))
+(.start t)
+(.join t)
+(def t1 (System/currentTimeMillis))
+(prn "t1-t0=" (- t1 t0) "ms")
+;; (.join ct)
+
+;; thread needs to be created and started
+;; thread needs to be joined when creator thread wants to block until thread is finished
+;; thread can return results via atom
+(def r (atom {}))
+(def t (Thread. (fn[] (reset! r {}) (Thread/sleep 10000) (swap! r #(conj %1 [:result (rand)])))))
+(.start t)
+(.join t)   ;; blocked here waiting for thread to finish
+(println @r)
+
+;; future runs when created
+;; future can return results directly
+(def f (future (Thread/sleep 10000) {:result (rand)}))
+@f  ;; blocked here waiting for future (pool thread) to finish
+
+(zipmap [\a \b \c \d] [1 2 3 4])
+(zipmap "foobar" (range 100))
+(def random-nums (repeatedly rand))
+(take 10 random-nums)
+
+(defn f[x]
+(let [y (or x 0)] y))
+(f -1)
+(f 0)
+(f nil)
+(f 1)
+
+(dorun (for[i (range 10)] i))   ;; side-effect
+(doall (for[i (range 10)] i))   ;; side-effects and keep values
+
+(dorun (for[i (range 10)] (println i)))   ;; side-effect, value nil
+(doall (for[i (range 10)] (println i)))   ;; side-effect, value nil
+
+(dorun (for[i (range 10)] (do (println i) 1)))  ;; side-effect, value 1
+(doall (for[i (range 10)] (do (println i) 1)))  ;; side-effect, value 1
+
+(prn (for [i "abcd", j (range 4)] `(~i ~j)))
+(prn (into [] (for [i "abcd", j (range 4)] `(~i ~j))))
+(prn (for [i "abcd", j (range 4)] (vector i  j)))
+(prn (into [] (for [i "abcd", j (range 4)] (vector i  j))))
+
+;; :exit, :out, :err
+(require '[clojure.java.shell :as shell])
+;; (shell/sh "/bin/bash" "-c" "echo test")
+(print (:out (shell/sh "bash" "-c" "ls")))
+(print (:out (shell/sh "bash" "-c" "pwd")))
+
+;; destructuring works with macros
+(defmacro e2[[arg1 op arg2]] `(~op ~arg1 ~arg2))
+
+(defmacro swap[[op arg1 arg2]] `(~op ~arg2 ~arg1))
+(println '(swap (- 5 10)) "="   (swap (- 5 10)))
+
+(defmacro e [f]
+  (cond (not (seq? f)) f                    ;; expr -> expr
+        (= 1 (count f)) `(e ~(first f))     ;; (expr) -> expr
+        true (let [op (second f),
+                   arg1 (first f),
+                   arg2 (rest (rest f))]
+               `(~op (e ~arg1) (e ~arg2)))))
+
+(prn (e (1 + 1)))
+(prn (e (2 * 2)))
+(prn (e (2 * (1 + 1))))
+(prn (e (2 * (1 + (11 - 10)))))
+
+;; (first nil) => nil
+;; (last nil) => nil
+;; (next nil) => nil
+;; (rest nil) => ()
+(let [xs [1 2 3 4]] 
+  [(next xs)
+   (rest xs)
+   (first xs)
+   (last xs)
+   ])
+
+;; rest returns () when provided with nil or empty sequence
+;; other return nil when provoded with nil or empty sequence
+(map (fn[f](f nil)) [first last next rest])
+(map (fn[f](f [])) [first last next rest])
+(map (fn[f](f [1])) [first last next rest])
+(map (fn[f](f [1 2])) [first last next rest])
+(map (fn[f](f [1 2 3])) [first last next rest])
+
+(def m {:a 1, :b 2, :c 3, :d 4})
+(def m' (into {} (map (fn[[k v]] [v k]) (into [] m))))
+(defn map-invert[m] (into {} (map (fn[[k v]] [v k]) (into [] m))))
+(defn map-invert-maybe[m] 
+  (let [m-size (count m)
+       m' (into {} (map (fn[[k v]] [v k]) (into [] m)))
+       m'-size (count m')]
+      (if (= m'-size m-size) [true m'] [false m'])))
+
 
 
