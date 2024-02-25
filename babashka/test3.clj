@@ -20,15 +20,24 @@
 ;; (read)
 ;; (System/exit 0)
 
-(defn -main [& [args]]
-  (let [opts (cli/parse-opts args cli-options)]
-  ;; (let [opts (cli/parse-opts (first args) cli-options)]
-  ;; (let [opts (cli/parse-opts ["-n" "foo" "-a" "1"] cli-options)]
+;; (defn -main [& [args]]
+;;   (let [opts (cli/parse-opts args cli-options)]
+;;   ;; (let [opts (cli/parse-opts (first args) cli-options)]
+;;   ;; (let [opts (cli/parse-opts ["-n" "foo" "-a" "1"] cli-options)]
+;;     (println "Options:" (:options opts))
+;;     (println "Arguments:" (:arguments opts))
+;;     (println "Summary:" (:summary opts))
+;;     (when (:help opts)
+;;       (println (:usage opts)))))
+
+(defn -main [& args]
+  (let [opts (cli/parse-opts (flatten args) cli-options)]
     (println "Options:" (:options opts))
     (println "Arguments:" (:arguments opts))
     (println "Summary:" (:summary opts))
     (when (:help opts)
       (println (:usage opts)))))
+
 
 (-main *command-line-args*)
 (System/exit 0)
