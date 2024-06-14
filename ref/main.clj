@@ -2,6 +2,13 @@
 
 (ns example-ref)
 
+;; warning
+;; (require '[clojure.core :as c :refer [reverse]])
+;; (require '[clojure.string :as s :refer [reverse]])
+;; error
+;; (require '[clojure.set :as s])
+;; (require '[clojure.string :as s])
+
 (require '[clojure.pprint :refer (cl-format)])
 (require '[clojure.pprint :refer (pprint)])
 (require '[clojure.pprint :as pp])
@@ -655,6 +662,7 @@
 ;; (+ (read) (read))
 
 ;; java array
+(require '[clojure.pprint :as pp :refer [pprint]])
 (def l (make-array Long 10))
 (pprint l)
 (aset l 0 1)
@@ -671,7 +679,7 @@
 (pp/pprint 1)
 (pprint 1)
 (resolve 'pprint)
-(clojure.main/repl :print :pprint)
+;; (clojure.main/repl :print :pprint)   ;; uncomment to drop to repl
 
 ;; will require and refer all functions
 (use 'clojure.pprint)
@@ -709,11 +717,11 @@
 (vector 1 2 3 4 5 6 7 8 9)
 (vec (range 10))
 
-(import java.util.jar.JarFile)
-(def f (JarFile. "./A.jar"))
-(while (.hasMoreElements entries)
-    (let [entry (.nextElement entries)]
-        (println (.getName entry))))
+;; (import java.util.jar.JarFile)
+;; (def f (JarFile. "./A.jar"))
+;; (while (.hasMoreElements entries)
+;;     (let [entry (.nextElement entries)]
+;;         (println (.getName entry))))
 
 ;; \n = \r\n, but not \n\r or \r
 (require '[clojure.string :as str])
@@ -727,7 +735,7 @@
 
 (.nextInt (Random.))
 (def r (Random.))
-(.setSeed 0 r)
+(.setSeed r 0)
 (.nextLong r)
 
 (.nextDouble (doto (Random.) (.setSeed 0) (.nextLong)))
@@ -748,7 +756,8 @@
 
 (.millis (Clock/systemUTC))
 
-(let [ms #(.millis (Clock/systemUTC)), now (ms), stop (+ 60000 now)]
+;; (let [ms #(.millis (Clock/systemUTC)), now (ms), stop (+ 60000 now)]
+(let [ms #(.millis (Clock/systemUTC)), now (ms), stop (+ 6000 now)]
   (while (< (ms) stop) (do (Thread/sleep 100) (println "."))))
 
 (prn (System/nanoTime))
@@ -793,12 +802,12 @@
 (while (.find m) (println (.group m "x")))
 (println (.pattern m))
 
-(def count (atom 0))
+(def counter (atom 0))
 ;; (def pattern-num #"\b(?<varname>\w+)\s*=\s*(?<varval>\d+)\s*;\b")
 (def pattern-num #"\b(?<varname>\w+)\s*=\s*(?<varval>\d+)\b\s*;")
 (def m (re-matcher pattern-num "foo=123;bar =456;foobar=789;"))
-(while (.find m) (println (.group m "varname") (.group m "varval")) (swap! count inc))
-(println "found " @count " matches")
+(while (.find m) (println (.group m "varname") (.group m "varval")) (swap! counter inc))
+(println "found " @counter " matches")
 
 (try (/ 1 0) (throw (IllegalArgumentException.)) (println "here") (catch ArithmeticException e 1) (catch IllegalArgumentException e 2))
 (try #_(/ 1 0) (throw (IllegalArgumentException.)) (println "here") (catch ArithmeticException e 1) (catch IllegalArgumentException e 2))
@@ -1005,7 +1014,7 @@
 (.compareTo 1M 1M)
 (.compareTo 1.0 1.1)
 (.compareTo 1 1)
-(.compareTo 1N 1N)
+;; (.compareTo 1N 1N)   ;; depends on version if method available in BigInt
 
 (zero? 0)
 (zero? 1)
@@ -1058,6 +1067,8 @@
 (reset! a1 2)
 (swap! a1 inc)
 
+;; (try  (do (println "start") (throw (Exception.))) (catch Exception e (println "catched")))
+
 ;; using refs
 (def r1 (ref 1))
 (def r2 (ref 1))
@@ -1070,7 +1081,7 @@
 (def r2 (ref 1))
 (def r3 (ref 1))
 (def r4 (ref 1))
-(dosync (alter r1 inc) (alter r2 (partial + 1)) (alter r3 (fn[x](+ 1 x))) (alter r4 #(+ 1 %)) (throw (Exception.)))
+(try (dosync (alter r1 inc) (alter r2 (partial + 1)) (alter r3 (fn[x](+ 1 x))) (alter r4 #(+ 1 %)) (throw (Exception.))) (catch Exception e (println "catched")))
 (println @r1 @r2 @r3 @r4)
 ;;
 ;; dosync has no effect on atoms, no roll-back with exception
@@ -1078,12 +1089,13 @@
 (def r2 (atom 1))
 (def r3 (atom 1))
 (def r4 (atom 1))
-(dosync (swap! r1 inc) (swap! r2 (partial + 1)) (swap! r3 (fn[x](+ 1 x))) (swap! r4 #(+ 1 %)) (throw (Exception.)))
+(try (dosync (alter r1 inc) (alter r2 (partial + 1)) (alter r3 (fn[x](+ 1 x))) (alter r4 #(+ 1 %)) (throw (Exception.))) (catch Exception e (println "catched")))
 (println @r1 @r2 @r3 @r4)
 
-(require '[clojure.string :as s :refer [split] :rename {reverse rev}])
+;; s already aliased to set => error when using s
+(require '[clojure.string :as s1 :refer [split] :rename {reverse rev}])
 ;; no rev here
-(require '[clojure.string :as s :refer [split, reverse] :rename {reverse rev}])
+(require '[clojure.string :as s1 :refer [split, reverse] :rename {reverse rev}])
 ;; now rev available
 
 (clojure.core/replace {"a" "b"} ["a" "b" "c"])
@@ -1278,8 +1290,11 @@
 (partition 2 (interleave xs ys))
 (map (fn[x y] [x y]) xs ys)
 
+(println "0 | 1 => ")
 (case (read) 0 "null" 1 "eins")
+(println "0 | 1 => ")
 (take 2 (repeat (case (read) 0 "null" 1 "eins")))
+(println "0 | 1 => ")
 (for [_ (range 2)] (case (read) 0 "null" 1 "eins"))
 
 (if '() 1 2)
@@ -1299,7 +1314,7 @@
 
 (require '[clojure.walk :as w])
 (w/walk #(nth % 0) #(apply max %) [[0, 1, 2, 3] [4, 5, 6, 7] [8, 9, 10] [11]])
-(w/walk count #(apply max %) [[0, 1, 2, 3] [4, 5, 6, 7] [8, 9, 10] [11]])
+(w/walk count #(apply max %) [[0, 1, 2, 3] [4, 5, 6, 7] [8, 9, 10] [11]])     ;; (count) requires IFn Counted => clojure.lang.Counted
 
 ;; prewalk iterates over outer elements first => 1, [2.0, 2.1], 2.0, 2.1 ...
 ;; postwalk iterates over outer elements last => 1, 2.0, 2.1, [2.0, 2.1] ...
@@ -1369,6 +1384,7 @@
 (ns other)
 (defn f "doc of f" [n] (* 2 n))
 ;; (doc f)    ;; will not work
+(require 'clojure.repl)
 (clojure.repl/doc f)
 ;; (dir other)    ;; will not work
 (clojure.repl/dir other)
@@ -1759,5 +1775,81 @@ clojure.core/*ns*
 (and 0 [] false {} nil #{} '() "")  ;; "false", first "false" value returned => false
 (or nil false 1 "")   ;; "true", first "true" value returned => 1
 (or nil false "" 1)   ;; "true", first "true" value returned => ""
+
+;; returns arrays
+(.getFields System)
+(.getMethods System)
+(.getConstructors System)
+
+(require '[clojure.reflect :as r])
+(resolve 'r/reflect)
+(def rs (r/reflect System))
+(keys rs)
+(:bases rs)
+(:flags rs)
+(:members rs)   ;; fields, methods, constructors
+(map type (:members rs))
+(map :name (:members rs))
+
+(def mrs (:members rs))
+(for[m mrs] (printf "%s : %s -> %s ... %s\n" (:name m) (:parameter-types m) (:return-type m) (:flags m)))
+
+(defn is-field[m] (printf "%s : %s ... %s\n" (:name m) (:type m) (:flags m)))
+(defn is-method[m] (printf "%s : %s -> %s ... %s\n" (:name m) (:parameter-types m) (:return-type m) (:flags m)))
+(defn is-constructor[m] (printf "%s : %s -> void ... %s\n" (:name m) (:parameter-types m) (:flags m)))
+(for [m mrs]
+  (do (condp = (count (keys m))
+          4 (is-field m)
+          5 (is-constructor m)
+          6 (is-method m)
+          nil)))
+
+(System/setIn nil)
+(System/setOut nil)
+(System/setErr nil)
+(System/in)
+(System/out)
+(System/err)
+
+(require '[clojure.pprint :as pp])
+(pp/pprint (:members (r/reflect System)))
+(pp/pprint (:members (r/reflect java.io.File)))
+(pp/pprint (:members (r/reflect java.util.Set)))
+(pp/pprint (:members (r/reflect java.util.Date)))
+(pp/pprint (:members (r/reflect java.util.Currency)))
+(pp/pprint (:members (r/reflect java.awt.Paint)))
+(pp/pprint (:members (r/reflect java.awt.Rectangle)))
+(pp/pprint (:members (r/reflect java.math.BigDecimal)))
+(pp/pprint (:members (r/reflect java.math.BigInteger)))
+(pp/pprint (:members (r/reflect java.math.MathContext)))
+(pp/pprint (:members (r/reflect java.time.LocalDate)))
+(pp/pprint (:members (r/reflect java.lang.Cloneable)))
+(pp/pprint (:members (r/reflect java.lang.Compiler)))
+(pp/pprint (:members (r/reflect java.lang.System)))
+(pp/pprint (:members (r/reflect java.lang.Thread)))
+
+(pp/pprint (:members (r/reflect java.util.regex.Matcher)))
+(pp/pprint (:members (r/reflect java.util.regex.Pattern)))
+
+(def m (java.util.regex.Pattern/compile "foo"))
+(.matcher m "foo")
+(println (java.util.regex.Pattern/DOTALL))
+
+;; WSL1 (installed)
+;; export DISPLAY=:0
+
+;; WSL2
+;; export DISPLAY=:0.0
+
+;; Can't load library: /usr/lib/jvm/java-16-openjdk-amd64/lib/libawt_xawt.so
+;; (java.awt.Frame.)
+;; (java.awt.Dialog.)
+
+;; static function
+(java.util.Currency/getAvailableCurrencies)
+
+(condp (fn[i x](= i x)) (read) 1 "eins")
+(condp (fn[i x](= i x)) (read) 1 "eins" nil)
+
 
 
