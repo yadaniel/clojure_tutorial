@@ -1851,5 +1851,177 @@ clojure.core/*ns*
 (condp (fn[i x](= i x)) (read) 1 "eins")
 (condp (fn[i x](= i x)) (read) 1 "eins" nil)
 
+;; how to use walk
+;; simple example
+(clojure.walk/walk identity identity [1 2 3 4])
+(clojure.walk/walk inc identity [1 2 3 4])
+(clojure.walk/walk identity #(apply + %) [1 2 3 4])
+(clojure.walk/walk inc #(apply + %) [1 2 3 4])
+
+;; complex example
+(def c [[1] [1 2] [1 2 3] [1 2 3 4]])
+(clojure.walk/walk first identity c)  ;; [1 1 1 1]
+(clojure.walk/walk last identity c)   ;; [1 2 3 4]
+(clojure.walk/walk count identity c)  ;; [1 2 3 4]
+(apply + (flatten c))                             ;; 20
+(clojure.walk/walk #(apply + %) #(apply + %) c)   ;; 20
+
+(def c1 [[1] [1 2] [1 2 3] [1 2 3 4] [1 2 3 4 5 [6]]])
+(clojure.walk/postwalk (fn[x](if (coll? x) (apply + x) x)) c1)
+(apply + (flatten c1))
+
+(def c1 [[1] [1 2] [1 2 3] [1 2 3 4] [1 2 3 4 5 [6]]])
+(def c1 ["txt"])
+(def c1 "txt")
+(def c1 [0 [1] [1 2] [1 2 3] [1 2 3 4] [1 2 3 4 5 [6]]])
+(clojure.walk/prewalk (fn[x](if (coll? x) (count x) x)) c1)
+
+;; complex example
+(def d [{:id 0, :n 100, :c 0} {:id 1, :n 200, :c 1} {:id 2, :n 300, :c 1} {:id 3, :n 100, :c 1}])
+(clojure.walk/walk :id identity d)
+(clojure.walk/walk :n (fn[x](apply + x)) d)
+(clojure.walk/walk #(update % :c inc) identity d)
+(clojure.walk/walk #(update % :c inc) (fn[x](apply + (map :c x))) d)
+
+(def m {:x0 true, :x1 false, :x2 true, :x3 false})
+(update m :x0 (fn[x](if x 1 0)))
+(update m :x0 (fn[x y](if x y 0)) 10)
+
+(def nested-m {:p {:p nil, :v 0}, :v 1})
+(update-in nested-m [:p :v] inc)
+
+;; transduce is function which applies transducer to collection and reduces it to one value
+(transduce cat conj [] [[1] [2] [3] [4]])
+(transduce cat conj [] [[1] [2] [3] [4 [5]]])
+(transduce (comp cat) conj [] [[1] [2] [3] [4 [5]]])
+(transduce (comp cat (filter even?)) conj [] [[1] [2] [3] [4]])
+
+((comp inc inc) 0)
+
+;; + is object
+((-> +) 0)
+((-> +) 0 1)
+((->> +) 0)
+((->> +) 0 1)
+
+(-> 0 +)
+(->> 0 +)
+(-> 0 ((fn[x](+ x))))
+(->> 0 ((fn[x](+ x))))
+
+(->> [1 2 3 4] (take 2))
+(-> [1 2 3 4] (count))
+
+(transduce (take 5) + (range))
+(transduce (take 5) + 10 (range))
+
+(apply str (mapcat #(take 2 %) ["foo" "bar" "baz"]))
+(apply str (flatten (map #(take 2 %) ["foo" "bar" "baz"])))
+
+(type (comp cat (filter even?)))
+(type (transduce cat conj []))
+(type (sequence cat []))
+(type (eduction cat []))
+
+(defn f[x y] (+ x y))
+((fnil f 0) 0 0)
+((fnil f 0) nil 0)
+((fnil f 0 0) 0 nil)
+((fnil f 0 0) nil nil)
+
+(defn q''[& r] (count r))
+
+(defn q ([]0)
+        ([x]1)
+        ([x & r](+ 1 (count r))))
+
+(def q' (fn ([]0)
+            ([x]1)
+            ([x & r](+ 1 (count r)))))
+
+;; custom transducer
+(transduce 
+  (filter even?)  ;; transducer
+  (fn                 ;; reducer
+    ([x]x)            ;; arity 1
+    ([x y](+ x y)))   ;; arity 2
+    0                 ;; initial value
+    (range 100)
+  )
+
+;; using +
+(transduce 
+  (filter even?)  ;; transducer
+    +             ;; (doc +) => [] [x] [x y] [x y & r]
+    0
+    (range 100)
+  )
+
+;; different styles
+(reduce + (filter odd? (map #(+ 2 %) (range 0 10))))
+
+(def xform 
+  (comp
+    (partial filter odd?)
+    (partial map #(+ 2 %))))
+(reduce + (xform (range 0 10)))
+
+(defn xform[xs]
+  (->> xs
+       (map #(+ 2 %))
+       (filter odd?)))
+(reduce + (xform (range 0 10)))
+
+(+)           ;; 0 [] [x] [x y] [x y & r]
+(- 0)         ;; 0 [x] [x y] [x y & r]
+(*)           ;; 1 [] [x] [x y] [x y & r]
+(/ 1)         ;; 1 [x] [x y] [x y & r]
+(> 10)        ;; true
+(< 10)        ;; true
+(> 10 5 1)    ;; true
+(< 1 5 10)    ;; true
+(str)         ;; ""
+(list)        ;; () persistent list
+(vector)      ;; [] persistent vector
+(hash-map)    ;; {} persistent array map ... this is optimization
+(hash-map :a 1)    ;; {} persistent hash map 
+(array-map)   ;; {} persistent array map
+(sorted-map)  ;; {} persistent tree map
+(hash-set)    ;; #{}  persistent hash set
+(sorted-set)  ;; #{}  persistent tree set
+
+(type (hash-map))
+(type (hash-map :a 1))
+(type (array-map))
+(type (array-map :a 1))
+
+(def ss (sorted-set))
+(defn random-1-100[](int (* 100 (rand))))
+(dotimes [_ 10] (def ss (conj ss (random-1-100))))
+(doseq [] (for[i ss] (+ 100 i)))
+
+(def sm (sorted-map))
+(def lowercase-letters "abcdefghijklmnopqrstuvwxyz")
+(def k (atom #{}))
+(dotimes [_ 10] (swap! k conj (take 1 (shuffle (seq lowercase-letters)))))
+(def k2 (atom #{}))
+(dotimes [_ 10] (swap! k2 conj (rand-nth (seq lowercase-letters))))
+
+;; partial only binds from left to right
+
+(keyword "x") ;; from str to keyword
+(symbol "x")  ;; from str to symbol
+(name 'x)     ;; from symbol to str
+
+(->> (range)
+     (take 10)
+     (shuffle))
+
+(->> (range)
+     (take 10)
+     (shuffle)
+     (filter (partial > 1))
+     (filter (partial < 7))
+     )
 
 
