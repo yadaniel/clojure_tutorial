@@ -1957,6 +1957,19 @@ clojure.core/*ns*
     (range 100)
   )
 
+;; reduce expects function of type
+;; acc,input -> acc
+;; transduce expects same type
+;; transducer is transfomration of type
+;; (acc, input -> acc ) -> (acc, input -> acc)
+
+(def f1 (filter even?))
+(def f2 (filter (partial < 10)))
+(def f3 (f1 f2))
+(def f3' (comp f1 f2))
+(transduce f3 + 0 (range 21))
+(transduce f3' + 0 (range 21))
+
 ;; different styles
 (reduce + (filter odd? (map #(+ 2 %) (range 0 10))))
 
@@ -2023,5 +2036,242 @@ clojure.core/*ns*
      (filter (partial > 1))
      (filter (partial < 7))
      )
+
+;; repl commands
+(doc map)
+(source map)
+(apropos #"map")  ;; string or regex
+(dir clojure.core)
+(javadoc java.util.Date)  ;; class or object
+(find-doc random)
+
+(take 10 (repeatedly #(rand-int 100)))
+(defn divide-safe[x y]
+  (try (/ x y) (catch Exception e ##NaN)))
+(divide-safe 10 2)
+(divide-safe 10 0)
+
+(Byte/BYTES)
+(Integer/BYTES)
+(Short/BYTES)
+(Long/BYTES)
+
+(Character/BYTES)
+
+(Float/BYTES)
+(Double/BYTES)
+
+((juxt + *) 1 1)
+(into (sorted-set) (frequencies (range 10)))
+(map (fn[[x y]](+ x y)) (partition 2 [1 2 3 4]))
+
+;; filter :: [a] -> (a -> Bool) -> [a]
+;; map :: [a] -> (a -> b) -> [b]
+;; (map . inc) :: [a] -> [b]
+;; (map . inc) . (map . inc) :: [a] -> [c]
+
+(eduction (comp (map inc) (map inc)) (range 10))
+(def xf  (comp (map inc) (map inc)))
+(eduction xf (range 10))
+
+(def xs (range 1e9))
+(transduce identity (fn([acc x](inc acc))([x]x)) 0 xs)
+
+(def xs (eduction (range 1e9)))
+(transduce identity (fn([acc x](inc acc))([x]x)) 0 xs)
+
+;; doall
+;; dorun
+
+;; eduction is a way to apply a transducer to a collection of data without creating intermediate data structures
+;; eduction takes transducers as arguments and captures the transduction process into a function
+;; it applies this function to input, but the result is reducable/iterable, not concrete data structure
+
+;; OK
+(def a (eduction (map identity) (range 1e9)))
+(reduce + a)
+
+;; OutOfMemory
+(def a (map identity (range 1e9)))
+(reduce + a)
+
+;;             v second  v first
+(def xf (comp (map inc) (map inc)))
+(def ed (eduction xf (range 10)))     ;; eduction binds transducer (individial or composed) with collection
+(transduce identity + ed)             ;; since collection is already bound (with transducer) => use identity as transducer
+(transduce (map inc) + ed)            ;; additional transducer can be used ... third
+
+(defn sum
+  ([]0)
+  ([x]x)
+  ([x y](+ x y)))
+
+(transduce identity sum ed)
+
+(transduce (map inc) + 0 (range 10))                      ;; 55
+(transduce ((map inc) (map inc)) + 0 (range 10))          ;; 55 => second transducer is skipped
+(transduce (comp (map inc) (map inc)) + 0 (range 10))     ;; 65
+;;           v skipped
+(transduce ((map dec) (map inc)) + 0 (range 10))          ;; 55 => second transducer is skipped
+
+(->> 1 
+     (+ 1)
+     (+ 1)
+     ((partial 'Math/pow 2)))   ;; not correct result
+
+((partial 'Math/pow 2) 3)   ;; not correct result
+
+(defn pow[x y] (Math/pow x y))
+(->> 1 
+     (+ 1)
+     (+ 1)
+     ((partial pow 2)))
+
+;; non-lazy
+(mapv (fn[x y](+ x y)) (range 10) (range 1 100))  ;; lowest sequence
+(mapv (fn[[x y]](+ x y)) (partition 2 1 (range 11)))
+
+(+ 1 2 3 4)
+(min 1 2 3 4)
+(max 1 2 3 4)
+
+(find-doc "macroexpand")
+(defmacro sum-xs[& xs] `(+ ~xs))    ;; (+ (1 2 3 4))
+(defmacro sum-xs'[& xs] `(+ ~@xs))  ;; (+ 1 2 3 4),  works with splicing
+(macroexpand-1 '(sum-xs 1 2 3 4))
+(macroexpand-1 '(sum-xs' 1 2 3 4))
+
+(defn sum-xs[& xs] (apply + xs))
+(defn min-xs[& xs] (apply min xs))
+(defn max-xs[& xs] (apply max xs))
+
+(= (hash-map :a 100, :b 200) (sorted-map :b 200, :a 100))
+(= (hash-map :a 100, :b 200) (array-map :b 200, :a 100))
+
+;; transaction
+(def r1 (ref []))
+(dosync (alter r1 #(conj % 1)) (println "transaction running ...") (/ 1 0))
+@r1
+
+(concat "a" "b" "c")    ;; returns lazy sequence -> not string
+(concat [1] [2] [3])    ;; returns lazy sequence -> not vector
+(str "a" "b" "c")       ;; "abc"
+(str "a" \b "c")        ;; "abc" ... converts chars to string
+(str 1)                 ;; ... converts ints to string
+(str)                   ;; ... takes 0 to more parameters
+(str "a" \b 3 4.0 " " 1N 1M [] {} #{})
+(apply str [])          ;; needs apply when arguments are provided in sequence
+
+(require '[clojure.string :as s])
+(s/join " " ["a" "b" "c"])
+(apply str (interpose " " "abc"))   ;; unpack lazy sequence with apply
+
+;; assoc/conj ... conj more like apply
+
+;; return itself
+(into (list))
+(into (vector)
+(into (hash-map))
+(into (sorted-map))
+(into (hash-set))
+(into (sorted-set))
+
+(into (hash-map) [[:b 2] [:a 1]])
+(into (sorted-map) [[:b 2] [:a 1]])
+
+;; hard coded number of values and range
+(into (sorted-map) (frequencies (take (read) (repeatedly #(rand-int -10)))))
+
+;; number of values provided by (read) => less flexible
+(into (sorted-map) (frequencies (take (read) (repeatedly #(rand-int -10)))))
+
+;; as function of both parameters
+(defn f-rand[N, R]
+  (into (sorted-map) (frequencies (take N (repeatedly #(rand-int R))))))
+
+;; as macro with both parameters
+(defmacro m-rand[N, R] 
+  `(into (sorted-map) (
+      frequencies (take ~N (repeatedly #(rand-int ~R))))))
+
+
+(import [java.util Set Map List Arrays])
+
+(import java.util.Map,
+        java.util.Set,
+        java.util.List,
+        java.util.Arrays)
+
+
+(Map/of :a 0, :b 1)
+(Set/of 1 2 3)
+(List/of 1 2 3)
+
+(def a1 (into-array [1 2 3]))     ;; Long
+(count a1)
+
+(def a2 (into-array [1.0 2.0 3.0]))     ;; Double ... all numbers must be floating point, not just implicitly convertable
+(count a2)
+
+(def a3 (into-array Byte/TYPE [1 2 3]))     ;; Byte
+(count a3)
+
+(def a4 (make-array Integer 10))  ;; explicit ... Integer
+(count a4)
+
+(def a5 (make-array Integer/TYPE 10))  ;; explicit ... Integer
+(count a5)
+(alength a5)
+
+(byte-array 10)
+(short-array 10)
+(long-array 10)
+(int-array 10)
+(float-array 10)
+(double-array 10)
+
+(byte-array 10 (byte 10))
+(short-array 10 (short 10))
+(long-array 10 10)
+(int-array 10 10)
+(float-array 10 10)
+(double-array 10 10)
+
+;; Byte/TYPE refers to primitive type Byte
+;; Byte refers to wrapper class java.lang.Byte
+(def ba10 (byte-array 10))              ;; [B ... array of bytes
+(def ba10' (make-array Byte/TYPE 10))   ;; [B ... array of bytes
+(def ba10'' (make-array Byte 10))       ;; [Ljava.lang.Byte ... array of references to bytes
+(map type `(~ba10 ~ba10' ~ba10''))
+(seq ba10)      ;; [0 0 ... 0]
+(seq ba10')     ;; [0 0 ... 0]
+(seq ba10'')    ;; [nil nil ... nil]
+
+;; using arrays
+;; (def ba10 (byte-array 10))              ;; default initialized
+(def ba10 (byte-array 10 (byte 0x0F)))  ;; explicitly initialized
+(alength ba10)
+(aget ba10 0)
+(aset ba10 0 (byte 1))
+(aget ba10 0)
+
+;; using multi dimensional arrays
+(def a2x2 (to-array-2d [[1 2] [3 4]]))
+(aget a2x2 0 0)
+(aset a2x2 0 0 10)
+(aget a2x2 0 0)
+(alength a2x2)
+(seq (aget a2x2 0))
+(seq (aget a2x2 1))
+
+;; repl
+*1
+*2
+*3
+
+(def info (atom []))
+(def ^{:info info} x 1)
+(swap! ((meta (var x)) :info) #(conj % 1))
+@info
 
 
