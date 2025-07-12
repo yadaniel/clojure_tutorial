@@ -1,5 +1,7 @@
 #!/usr/bin/env -S clojure -cp "."
 
+# use junk for clang
+
 (ns example-ref)
 
 ;; warning
